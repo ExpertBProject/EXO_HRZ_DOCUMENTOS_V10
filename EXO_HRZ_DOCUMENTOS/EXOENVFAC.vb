@@ -715,6 +715,8 @@ Public Class EXOENVFAC
         Dim intImpr As Integer = 0
         Dim intEmail As Integer = 0
         Dim iRespuesta As Integer = 0
+        Dim sConnection As String = ""
+        Dim oLogonProps As NameValuePairs2 = Nothing
 
         Try
             For i As Integer = 0 To oForm.DataSources.DataTables.Item("dtDoc").Rows.Count - 1
@@ -742,21 +744,46 @@ Public Class EXOENVFAC
                     'abro la conexion con el crystal para que el proceso tarde menos
                     sOutFileName = objGlobal.funcionesUI.refDi.OGEN.valorVariable("EXO_FORMATOFAC")
                     oReport.Load(sOutFileName)
+                    'objGlobal.SBOApp.StatusBar.SetText("...Fichero : " & sOutFileName, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+                    'Establecemos las conexiones a la BBDD
 
-                    ''Establecemos las conexiones a la BBDD
-
-                    sServer = objGlobal.compañia.Server
+                    sServer = "sleshana:30015" ' objGlobal.compañia.Server
+                    'sServer = objGlobal.refDi.SQL.dameCadenaConexion.ToString
                     sBBDD = objGlobal.compañia.CompanyDB
-                    sUser = objGlobal.compañia.DbUserName
+                    sUser = objGlobal.refDi.SQL.usuarioSQL
                     sPwd = objGlobal.refDi.SQL.claveSQL
 
 
-                    If Right(objGlobal.pathDLL, 6).ToUpper = "DLL_64" Then
-                        sDriver = "{B1CRHPROXY}"
-                    Else
-                        sDriver = "{B1CRHPROXY32}"
-                    End If
-                    oReport.ApplyNewServer(sDriver, sServer, sUser, sPwd, sBBDD)
+                    sDriver = "HDBODBC"
+                    sConnection = "DRIVER={" & sDriver & "};UID=" & sUser & ";PWD=" & sPwd & ";SERVERNODE=" & sServer & ";DATABASE=" & sBBDD & ";"
+
+                    'objGlobal.SBOApp.StatusBar.SetText("...Connection " & sConnection & "....", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+
+                    oLogonProps = oReport.DataSourceConnections(0).LogonProperties
+                    oLogonProps.Set("Provider", sDriver)
+                    oLogonProps.Set("Connection String", sConnection)
+
+                    'objGlobal.SBOApp.StatusBar.SetText("...Después de ologonpropos....", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+
+                    oReport.DataSourceConnections(0).SetLogonProperties(oLogonProps)
+                    oReport.DataSourceConnections(0).SetConnection(sServer, sBBDD, False)
+
+                    'objGlobal.SBOApp.StatusBar.SetText("...Después de set logon properties....", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+                    For Each oSubReport As ReportDocument In oReport.Subreports
+                        For Each oConnection As IConnectionInfo In oSubReport.DataSourceConnections
+                            oConnection.SetConnection(sServer, sBBDD, False)
+                            oConnection.SetLogon(sUser, sPwd)
+                        Next
+                    Next
+
+                    'objGlobal.SBOApp.StatusBar.SetText("...Despues de preparar la conexión con el impreso....", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+
+                    'If Right(objGlobal.pathDLL, 6).ToUpper = "DLL_64" Then
+                    '    sDriver = "{B1CRHPROXY}"
+                    'Else
+                    '    sDriver = "{B1CRHPROXY32}"
+                    'End If
+                    'oReport.ApplyNewServer(sDriver, sServer, sUser, sPwd, sBBDD)
 
                 End If
 
@@ -777,6 +804,8 @@ Public Class EXOENVFAC
                         'pdf y envio de email
                         If oForm.DataSources.DataTables.Item("dtDoc").GetValue("Email", i).ToString = "Y" Then
                             sOutFileName = objGlobal.funcionesUI.refDi.OGEN.valorVariable("EXO_FORMATOFAC")
+
+                            'objGlobal.SBOApp.StatusBar.SetText("Antes de generar pdf", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
                             'envio email
                             'sOutFileName = IO.Path.GetTempPath() & "Doc.rpt"
                             'GetCrystalReportFile(objGlobal.compañia, CType(oForm.Items.Item("cmbFac").Specific, SAPbouiCOM.ComboBox).Value, sOutFileName)
@@ -793,6 +822,7 @@ Public Class EXOENVFAC
                 Next
             End If
         Catch ex As Exception
+            objGlobal.SBOApp.StatusBar.SetText("Error " & ex.Message, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
             oReport.Close()
             oReport.Dispose()
             GC.Collect()
@@ -802,7 +832,7 @@ Public Class EXOENVFAC
             GC.Collect()
         End Try
     End Sub
-    Public Sub Imprimir(ByVal oCompany As SAPbobsCOM.Company, ByVal sRptFileName As String, ByVal iDocEntry As Integer, ByVal oReport As CrystalDecisions.CrystalReports.Engine.ReportDocument)
+    Public Sub Imprimir(ByVal oCompany As SAPbobsCOM.Company, ByVal sRptFileName As String, ByVal iDocEntry As Integer, ByRef oReport As CrystalDecisions.CrystalReports.Engine.ReportDocument)
         Dim sDesImp As String = ""
         Dim NombreFichero As String = ""
         Dim pd As New PrintDocument()
@@ -819,8 +849,10 @@ Public Class EXOENVFAC
             sDesImp = "Imprimir Factura"
 
             'oCRReport.Load(sRptFileName)
-            oReport.SetParameterValue("DOCKEY", iDocEntry)
-            oReport.SetParameterValue("OBJECTID", "13")
+            'oReport.SetParameterValue("DOCKEY", iDocEntry)
+            'oReport.SetParameterValue("OBJECTID", "13")
+
+            oReport.SetParameterValue("DocKey@", iDocEntry)
 
             'sServer = objGlobal.compañia.Server
             'sBBDD = objGlobal.compañia.CompanyDB
@@ -841,7 +873,7 @@ Public Class EXOENVFAC
             'ACTUALIZAR PRINTED LO HAGO POR QUERY PORQUE POR OBJETO TARDA MUCHO
             oRs = CType(objGlobal.compañia.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset), SAPbobsCOM.Recordset)
             sSql = "UPDATE ""OINV"" SET ""Printed"" ='Y',  ""U_stec_fimp"" ='" & DateTime.Now.ToString("yyyy-MM-dd") & "' ,""U_stec_himp"" ='" & DateTime.Now.Hour.ToString("00") + DateTime.Now.Minute.ToString("00") & "'  WHERE ""DocEntry"" =" & iDocEntry & ""
-                oRs.DoQuery(sSql)
+            oRs.DoQuery(sSql)
 
         Catch exCOM As System.Runtime.InteropServices.COMException
             objGlobal.SBOApp.StatusBar.SetText("Error: " & exCOM.Message, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
@@ -897,7 +929,7 @@ Public Class EXOENVFAC
         End Try
     End Sub
 
-    Public Sub GenerarPDF(ByVal iDocEntry As Integer, ByVal i As Integer, ByVal sRptFileName As String, ByVal sEmail As String, ByVal sNumFac As String, ByVal oReport As CrystalDecisions.CrystalReports.Engine.ReportDocument)
+    Public Sub GenerarPDF(ByVal iDocEntry As Integer, ByVal i As Integer, ByVal sRptFileName As String, ByVal sEmail As String, ByVal sNumFac As String, ByRef oReport As ReportDocument)
 
         'Dim oCRReport As New CrystalDecisions.CrystalReports.Engine.ReportDocument()
         Dim oFileDestino As CrystalDecisions.Shared.DiskFileDestinationOptions = Nothing
@@ -918,10 +950,10 @@ Public Class EXOENVFAC
             'oCRReport.Load(sRptFileName)
 
             'Establecemos los parámetros para el report.
-            oReport.SetParameterValue("DOCKEY", iDocEntry)
-            oReport.SetParameterValue("OBJECTID", "13")
+            oReport.SetParameterValue("DocKey@", iDocEntry)
+            'oReport.SetParameterValue(2, "13") '"OBJECTID", "13")
 
-
+            'objGlobal.SBOApp.StatusBar.SetText("...despues de oreport set ", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
             ''Establecemos las conexiones a la BBDD
 
             'sServer = objGlobal.compañia.Server
@@ -937,9 +969,9 @@ Public Class EXOENVFAC
             'End If
             'oCRReport.ApplyNewServer(sDriver, sServer, sUser, sPwd, sBBDD)
 
-
+            'objGlobal.SBOApp.StatusBar.SetText("...ruta temporal:" & IO.Path.GetTempPath() & " ", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
             sFileName = IO.Path.GetTempPath() & "Factura_" & sNumFac & ".pdf"
-
+            'objGlobal.SBOApp.StatusBar.SetText("...filename:" & sFileName & " ", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
 
             oReport.ExportOptions.ExportFormatType = CrystalDecisions.Shared.ExportFormatType.PortableDocFormat
 
