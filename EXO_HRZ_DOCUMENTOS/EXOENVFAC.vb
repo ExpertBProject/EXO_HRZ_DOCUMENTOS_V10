@@ -746,22 +746,28 @@ Public Class EXOENVFAC
                     oReport.Load(sOutFileName)
                     'objGlobal.SBOApp.StatusBar.SetText("...Fichero : " & sOutFileName, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
                     'Establecemos las conexiones a la BBDD
-
-                    sServer = "sleshana:30015" ' objGlobal.compañia.Server
+                    'oReport.DataSourceConnections.Clear()
+                    sServer = "192.168.0.97:30013" ' objGlobal.compañia.Server
                     'sServer = objGlobal.refDi.SQL.dameCadenaConexion.ToString
                     sBBDD = objGlobal.compañia.CompanyDB
                     sUser = objGlobal.refDi.SQL.usuarioSQL
                     sPwd = objGlobal.refDi.SQL.claveSQL
 
 
-                    sDriver = "HDBODBC"
-                    sConnection = "DRIVER={" & sDriver & "};UID=" & sUser & ";PWD=" & sPwd & ";SERVERNODE=" & sServer & ";DATABASE=" & sBBDD & ";"
+                    sDriver = "B1CRHPROXY"
+                    sConnection = "DRIVER={" & sDriver & "};UID=" & sUser & ";PWD=" & sPwd & ";SERVERNODE=" & sServer & ";DATABASENAME=NDB;DATABASE=" & sBBDD & ";"
+
+
+                    'Dim conrepor As CrystalDecisions.Shared.DataSourceConnections = oReport.DataSourceConnections
+                    'conrepor(0).SetConnection(sServer, sBBDD, sUser, sPwd)
+
 
                     'objGlobal.SBOApp.StatusBar.SetText("...Connection " & sConnection & "....", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
 
                     oLogonProps = oReport.DataSourceConnections(0).LogonProperties
                     oLogonProps.Set("Provider", sDriver)
                     oLogonProps.Set("Connection String", sConnection)
+                    oLogonProps.Set("Provider", sDriver)
 
                     'objGlobal.SBOApp.StatusBar.SetText("...Después de ologonpropos....", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
 
@@ -779,9 +785,9 @@ Public Class EXOENVFAC
                     'objGlobal.SBOApp.StatusBar.SetText("...Despues de preparar la conexión con el impreso....", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
 
                     'If Right(objGlobal.pathDLL, 6).ToUpper = "DLL_64" Then
-                    '    sDriver = "{B1CRHPROXY}"
+                    '    sDriver = "{HDBODBC}"
                     'Else
-                    '    sDriver = "{B1CRHPROXY32}"
+                    '    sDriver = "{HDBODBC32}"
                     'End If
                     'oReport.ApplyNewServer(sDriver, sServer, sUser, sPwd, sBBDD)
 
@@ -832,7 +838,7 @@ Public Class EXOENVFAC
             GC.Collect()
         End Try
     End Sub
-    Public Sub Imprimir(ByVal oCompany As SAPbobsCOM.Company, ByVal sRptFileName As String, ByVal iDocEntry As Integer, ByRef oReport As CrystalDecisions.CrystalReports.Engine.ReportDocument)
+    Public Sub Imprimir(ByVal oCompany As SAPbobsCOM.Company, ByVal sRptFileName As String, ByVal iDocEntry As Integer, ByRef oReport As ReportDocument)
         Dim sDesImp As String = ""
         Dim NombreFichero As String = ""
         Dim pd As New PrintDocument()
