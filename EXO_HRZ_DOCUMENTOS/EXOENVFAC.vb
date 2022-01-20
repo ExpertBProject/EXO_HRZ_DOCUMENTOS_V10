@@ -7,6 +7,7 @@ Imports System.Drawing.Printing
 Imports System.IO
 Imports EXO_HRZ_DOCUMENTOS.Extensions
 Imports CrystalDecisions.Shared
+Imports System.Text.RegularExpressions
 
 Public Class EXOENVFAC
     Inherits EXO_UIAPI.EXO_DLLBase
@@ -1055,6 +1056,13 @@ Public Class EXOENVFAC
             'GC.Collect()
         End Try
     End Sub
+    Public Function IsValidEmail(ByVal email As String) As Boolean
+        If email = String.Empty Then Return False
+        ' Compruebo si el formato de la dirección es correcto.
+        Dim re As Regex = New Regex("^([0-9a-zA-Z]([-\.\w]*[0-9a-zA-Z])*@([0-9a-zA-Z][-\w]*[0-9a-zA-Z]\.)+[a-zA-Z]{2,9})$")
+        Dim m As Match = re.Match(email)
+        Return (m.Captures.Count <> 0)
+    End Function
 
     Public Function EnvioEmail(ByVal sEmailDestino As String, ByVal sRutaEnvio As String, ByVal iDocEntry As Integer, ByRef sError As String) As Boolean
         Dim oCorreo As System.Net.Mail.MailMessage = Nothing
@@ -1083,7 +1091,7 @@ Public Class EXOENVFAC
             Dim Valor() As String
             If sEnvioMail = "" Then
                 objGlobal.SBOApp.MessageBox("Introduzca la configuración del envio de email en la parametrizacion general de Expert One")
-                EnvioEmail = False
+                Return False
             End If
 
             'TITULO Y CUERPO
@@ -1116,7 +1124,15 @@ Public Class EXOENVFAC
                         sFrom = Valor(1).ToString
                 End Select
             Next
+            If IsValidEmail(sFrom.Trim) = False Then
+                Dim sMensajeVal As String = "Nº Factura Interno: " & iDocEntry.ToString & ChrW(13) & ChrW(10) &
+                "Dirección de correo electrónico no válida """ & sFrom.Trim & """, el correo debe tener el formato: nombre@dominio.com, " & ChrW(13) & ChrW(10) &
+                    "por favor seleccione un correo valido."
+                objGlobal.SBOApp.MessageBox(sMensajeVal)
+                objGlobal.SBOApp.StatusBar.SetText("(EXO) - " & sMensajeVal, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error)
 
+                Return False
+            End If
             If sSecure = "N" Then
                 oSmtp = New System.Net.Mail.SmtpClient
                 oSmtp.Host = sSMTP
@@ -1136,14 +1152,24 @@ Public Class EXOENVFAC
 
             'Instanciamos el objeto correo y asociamos el usuario de origen
             oCorreo = New System.Net.Mail.MailMessage()
-            oCorreo.From = New System.Net.Mail.MailAddress(sFrom)
+            oCorreo.From = New System.Net.Mail.MailAddress(sFrom.Trim)
             'sEmailDestino = "shernandez@expertone.es"
             'Recuperamos la información del correo de envio
             If sEmailDestino <> "" Then
                 sSendTo = Split(sEmailDestino, ";")
                 For i As Integer = 0 To sSendTo.Length - 1
                     If sSendTo(i).Trim <> "" Then
-                        oCorreo.To.Add(sSendTo(i))
+                        If IsValidEmail(sSendTo(i).Trim) = False Then
+                            Dim sMensajeVal As String = "Nº Factura Interno: " & iDocEntry.ToString & ChrW(13) & ChrW(10) &
+                "Dirección de correo electrónico no válida """ & sSendTo(i).Trim & """, el correo debe tener el formato: nombre@dominio.com, " & ChrW(13) & ChrW(10) &
+                    "por favor seleccione un correo valido."
+                            objGlobal.SBOApp.MessageBox(sMensajeVal)
+                            objGlobal.SBOApp.StatusBar.SetText("(EXO) - " & sMensajeVal, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error)
+
+                            Return False
+                        Else
+                            oCorreo.To.Add(sSendTo(i).Trim)
+                        End If
                     End If
                 Next i
             End If
