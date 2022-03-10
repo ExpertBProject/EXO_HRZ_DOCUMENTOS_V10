@@ -74,11 +74,17 @@ Public Class EXOENVFAC
             objGlobal.refDi.OGEN.fijarValorVariable("EXO_FORMATOFAC", "")
         End If
 
+        If Not objGlobal.refDi.OGEN.existeVariable("EXO_FORMATOABO") Then
+            objGlobal.refDi.OGEN.fijarValorVariable("EXO_FORMATOABO", "")
+        End If
+
         If Not objGlobal.refDi.OGEN.existeVariable("EXO_CONFEMAIL") Then
             objGlobal.refDi.OGEN.fijarValorVariable("EXO_CONFEMAIL", "")
         End If
 
-
+        If Not objGlobal.refDi.OGEN.existeVariable("EXO_NOMBREIMPRESORA") Then
+            objGlobal.refDi.OGEN.fijarValorVariable("EXO_NOMBREIMPRESORA", "")
+        End If
     End Sub
 
 #End Region
@@ -129,8 +135,12 @@ Public Class EXOENVFAC
 
                                 Case SAPbouiCOM.BoEventTypes.et_KEY_DOWN
 
-                                Case SAPbouiCOM.BoEventTypes.et_MATRIX_LINK_PRESSED
 
+                                Case SAPbouiCOM.BoEventTypes.et_MATRIX_LINK_PRESSED
+                                    If EventHandler_Matrix_Link_Press_Before(infoEvento) = False Then
+
+                                        Return False
+                                    End If
                                 Case SAPbouiCOM.BoEventTypes.et_DOUBLE_CLICK
                                     If EventHandler_DoubleClick_Before(infoEvento) = False Then
                                         GC.Collect()
@@ -472,6 +482,33 @@ Public Class EXOENVFAC
             EXO_CleanCOM.CLiberaCOM.liberaCOM(CType(oForm, Object))
         End Try
     End Function
+
+    Private Function EventHandler_Matrix_Link_Press_Before(ByVal pVal As ItemEvent) As Boolean
+        Dim oForm As SAPbouiCOM.Form = Nothing
+        Dim oColumnTxt As SAPbouiCOM.EditTextColumn = Nothing
+
+        EventHandler_Matrix_Link_Press_Before = False
+
+        Try
+            oForm = objGlobal.SBOApp.Forms.Item(pVal.FormUID)
+
+            If oForm.DataSources.DataTables.Item("dtDoc").GetValue("Tipo", pVal.Row).ToString = "14" Then 'Abono
+                oColumnTxt = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item("DocEntry"), SAPbouiCOM.EditTextColumn)
+                oColumnTxt.LinkedObjectType = "14"
+            ElseIf oForm.DataSources.DataTables.Item("dtDoc").GetValue("Tipo", pVal.Row).ToString = "13" Then 'Factura 
+                oColumnTxt = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item("DocEntry"), SAPbouiCOM.EditTextColumn)
+                oColumnTxt.LinkedObjectType = "13"
+            End If
+
+            EventHandler_Matrix_Link_Press_Before = True
+
+        Catch ex As Exception
+            objGlobal.Mostrar_Error(ex, EXO_UIAPI.EXO_UIAPI.EXO_TipoMensaje.Excepcion)
+        Finally
+            EXO_CleanCOM.CLiberaCOM.Form(oForm)
+            EXO_CleanCOM.CLiberaCOM.liberaCOM(CType(oColumnTxt, Object))
+        End Try
+    End Function
 #End Region
     Public Function CargarForm() As Boolean
         Dim oForm As SAPbouiCOM.Form = Nothing
@@ -590,10 +627,10 @@ Public Class EXOENVFAC
             'sFechaH = dFechaH.Year.ToString("0000") & dFechaH.Month.ToString("00") & dFechaH.Day.ToString("00")
             '& " WHERE T0.""TaxDate"" >= '" & sFechaD & "' and T0.""TaxDate""<= '" & sFechaH & "' " _
             sSql = "SELECT * FROM (" _
-                & " SELECT 'N' ""Procesar"", T0.""DocEntry"",T0.""DocNum"", T0.""TaxDate"", T0.""CardCode"", T0.""CardName"",T0.""DocTotal"", " _
+                & " SELECT 'N' ""Procesar"", CASE WHEN T0.""ObjType"" ='13' THEN 'Factura' ELSE 'Abono' END ""TipoDoc"", T0.""DocEntry"",T0.""DocNum"", T0.""TaxDate"", T0.""CardCode"", T0.""CardName"",T0.""DocTotal"", " _
                 & " CASE WHEN T1.""U_stec_imp"" = 'S' THEN 'Y' ELSE 'N' END ""Imprimir""," _
                 & " CASE WHEN T1.""U_stec_mai"" = 'S' THEN 'Y' ELSE 'N' END ""Email"" ," _
-                & " T1.""E_Mail"" ""EnvEmail"" " _
+                & " T1.""E_Mail"" ""EnvEmail"", T0.""ObjType"" ""Tipo"" " _
                 & " FROM ""OINV"" T0" _
                 & " INNER JOIN ""OCRD"" T1 ON T0.""CardCode"" = T1.""CardCode"" " _
                 & " WHERE TO_CHAR(COALESCE(T0.""TaxDate"", ''), 'YYYYMMDD') >= '" & oForm.DataSources.UserDataSources.Item("FecD").ValueEx & "' " _
@@ -611,12 +648,51 @@ Public Class EXOENVFAC
             If CType(oForm.Items.Item("chkImp").Specific, SAPbouiCOM.CheckBox).Checked = True Then
                 sSql = sSql & " and COALESCE(T0.""Printed"",'N')='N' "
             End If
-
-            sSql = sSql & " UNION ALL SELECT 'N' ""Procesar"", T0.""DocEntry"",T0.""DocNum"", T0.""TaxDate"", T0.""CardCode"", T0.""CardName"",T0.""DocTotal"", " _
+            'abonos que se imprimen
+            sSql = sSql & "  UNION ALL  SELECT 'N' ""Procesar"", CASE WHEN T0.""ObjType"" ='13' THEN 'Factura' ELSE 'Abono' END ""TipoDoc"", T0.""DocEntry"",T0.""DocNum"", T0.""TaxDate"", T0.""CardCode"", T0.""CardName"",T0.""DocTotal"", " _
                 & " CASE WHEN T1.""U_stec_imp"" = 'S' THEN 'Y' ELSE 'N' END ""Imprimir""," _
                 & " CASE WHEN T1.""U_stec_mai"" = 'S' THEN 'Y' ELSE 'N' END ""Email"" ," _
-                & " T1.""E_Mail"" ""EnvEmail"" " _
+                & " T1.""E_Mail"" ""EnvEmail"", T0.""ObjType"" ""Tipo"" " _
+                & " FROM ""ORIN"" T0" _
+                & " INNER JOIN ""OCRD"" T1 ON T0.""CardCode"" = T1.""CardCode"" " _
+                & " WHERE TO_CHAR(COALESCE(T0.""TaxDate"", ''), 'YYYYMMDD') >= '" & oForm.DataSources.UserDataSources.Item("FecD").ValueEx & "' " _
+            & " AND TO_CHAR(COALESCE(T0.""TaxDate"", ''), 'YYYYMMDD') <= '" & oForm.DataSources.UserDataSources.Item("FecH").ValueEx & "' "
+            If oForm.DataSources.UserDataSources.Item("CodCli").Value <> "" Then
+                sSql = sSql & " AND T0.""CardCode"" ='" & oForm.DataSources.UserDataSources.Item("CodCli").Value & "'"
+            End If
+
+            If CType(oForm.Items.Item("chkCance").Specific, SAPbouiCOM.CheckBox).Checked = True Then
+                sSql = sSql & " and COALESCE(T0.""CANCELED"",'N')='N' "
+
+            End If
+            sSql = sSql & " And T1.""U_stec_imp"" = 'S' "
+
+            If CType(oForm.Items.Item("chkImp").Specific, SAPbouiCOM.CheckBox).Checked = True Then
+                sSql = sSql & " and COALESCE(T0.""Printed"",'N')='N' "
+            End If
+
+            sSql = sSql & " UNION ALL SELECT 'N' ""Procesar"", CASE WHEN T0.""ObjType"" ='13' THEN 'Factura' ELSE 'Abono' END ""TipoDoc"", T0.""DocEntry"",T0.""DocNum"", T0.""TaxDate"", T0.""CardCode"", T0.""CardName"",T0.""DocTotal"", " _
+                & " CASE WHEN T1.""U_stec_imp"" = 'S' THEN 'Y' ELSE 'N' END ""Imprimir""," _
+                & " CASE WHEN T1.""U_stec_mai"" = 'S' THEN 'Y' ELSE 'N' END ""Email"" ," _
+                & " T1.""E_Mail"" ""EnvEmail"", T0.""ObjType"" ""Tipo"" " _
                 & " FROM ""OINV"" T0" _
+                & " INNER JOIN ""OCRD"" T1 ON T0.""CardCode"" = T1.""CardCode"" " _
+                & " WHERE TO_CHAR(COALESCE(T0.""TaxDate"", ''), 'YYYYMMDD') >= '" & oForm.DataSources.UserDataSources.Item("FecD").ValueEx & "' " _
+            & " AND TO_CHAR(COALESCE(T0.""TaxDate"", ''), 'YYYYMMDD') <= '" & oForm.DataSources.UserDataSources.Item("FecH").ValueEx & "' "
+            If oForm.DataSources.UserDataSources.Item("CodCli").Value <> "" Then
+                sSql = sSql & " AND T0.""CardCode"" ='" & oForm.DataSources.UserDataSources.Item("CodCli").Value & "'"
+            End If
+            If CType(oForm.Items.Item("chkCance").Specific, SAPbouiCOM.CheckBox).Checked = True Then
+                sSql = sSql & " and COALESCE(T0.""CANCELED"",'N')='N' "
+
+            End If
+            sSql = sSql & " And T1.""U_stec_mai"" = 'S'  "
+
+            sSql = sSql & " UNION ALL SELECT 'N' ""Procesar"", CASE WHEN T0.""ObjType"" ='13' THEN 'Factura' ELSE 'Abono' END ""TipoDoc"", T0.""DocEntry"",T0.""DocNum"", T0.""TaxDate"", T0.""CardCode"", T0.""CardName"",T0.""DocTotal"", " _
+                & " CASE WHEN T1.""U_stec_imp"" = 'S' THEN 'Y' ELSE 'N' END ""Imprimir""," _
+                & " CASE WHEN T1.""U_stec_mai"" = 'S' THEN 'Y' ELSE 'N' END ""Email"" ," _
+                & " T1.""E_Mail"" ""EnvEmail"", T0.""ObjType"" ""Tipo"" " _
+                & " FROM ""ORIN"" T0" _
                 & " INNER JOIN ""OCRD"" T1 ON T0.""CardCode"" = T1.""CardCode"" " _
                 & " WHERE TO_CHAR(COALESCE(T0.""TaxDate"", ''), 'YYYYMMDD') >= '" & oForm.DataSources.UserDataSources.Item("FecD").ValueEx & "' " _
             & " AND TO_CHAR(COALESCE(T0.""TaxDate"", ''), 'YYYYMMDD') <= '" & oForm.DataSources.UserDataSources.Item("FecH").ValueEx & "' "
@@ -629,17 +705,19 @@ Public Class EXOENVFAC
             End If
             sSql = sSql & " And T1.""U_stec_mai"" = 'S' ) "
 
+            'abonos que se envian por email
+
             sSql = sSql & " ORDER BY  ""CardCode"" ,""TaxDate"""
             oForm.DataSources.DataTables.Item("dtDoc").ExecuteQuery(sSql)
             If CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Count > 0 Then
                 CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(0).Type = SAPbouiCOM.BoGridColumnType.gct_CheckBox
                 CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(0).AffectsFormMode = False
 
-                CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(7).Type = SAPbouiCOM.BoGridColumnType.gct_CheckBox
-                CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(7).AffectsFormMode = False
-
                 CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(8).Type = SAPbouiCOM.BoGridColumnType.gct_CheckBox
                 CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(8).AffectsFormMode = False
+
+                CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(9).Type = SAPbouiCOM.BoGridColumnType.gct_CheckBox
+                CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(9).AffectsFormMode = False
 
                 'CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(9).Type = SAPbouiCOM.BoGridColumnType.gct_CheckBox
                 'CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(9).AffectsFormMode = False
@@ -651,51 +729,64 @@ Public Class EXOENVFAC
 
                 oColumnTxt = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(1), SAPbouiCOM.EditTextColumn)
                 oColumnTxt.Editable = False
+                oColumnTxt.TitleObject.Caption = "TipoDoc"
+                oColumnTxt.TitleObject.Sortable = True
+
+                oColumnTxt = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(2), SAPbouiCOM.EditTextColumn)
+                oColumnTxt.Editable = False
                 oColumnTxt.TitleObject.Caption = "Número Interno"
                 oColumnTxt.TitleObject.Sortable = True
                 oColumnTxt.LinkedObjectType = "13"
 
-                oColumnTxt = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(2), SAPbouiCOM.EditTextColumn)
+                oColumnTxt = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(3), SAPbouiCOM.EditTextColumn)
                 oColumnTxt.Editable = False
                 oColumnTxt.TitleObject.Caption = "Número Documento"
                 oColumnTxt.TitleObject.Sortable = True
 
-                oColumnTxt = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(3), SAPbouiCOM.EditTextColumn)
+                oColumnTxt = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(4), SAPbouiCOM.EditTextColumn)
                 oColumnTxt.Editable = False
                 oColumnTxt.TitleObject.Caption = "Fecha Documento"
                 oColumnTxt.TitleObject.Sortable = True
 
-                oColumnTxt = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(4), SAPbouiCOM.EditTextColumn)
+                oColumnTxt = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(5), SAPbouiCOM.EditTextColumn)
                 oColumnTxt.Editable = False
                 oColumnTxt.TitleObject.Caption = "Código Cliente"
                 oColumnTxt.TitleObject.Sortable = True
                 oColumnTxt.LinkedObjectType = "2"
 
-                oColumnTxt = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(5), SAPbouiCOM.EditTextColumn)
+                oColumnTxt = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(6), SAPbouiCOM.EditTextColumn)
                 oColumnTxt.Editable = False
                 oColumnTxt.TitleObject.Caption = "Nombre Cliente"
                 oColumnTxt.TitleObject.Sortable = True
                 oColumnTxt.LinkedObjectType = "2"
 
-                oColumnTxt = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(6), SAPbouiCOM.EditTextColumn)
+                oColumnTxt = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(7), SAPbouiCOM.EditTextColumn)
                 oColumnTxt.Editable = False
                 oColumnTxt.TitleObject.Caption = "Total Documento "
                 oColumnTxt.TitleObject.Sortable = True
 
-                oColumnChk = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(7), SAPbouiCOM.CheckBoxColumn)
+                oColumnChk = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(8), SAPbouiCOM.CheckBoxColumn)
                 oColumnChk.Editable = False
                 oColumnChk.TitleObject.Caption = "Imprimir"
                 oColumnChk.TitleObject.Sortable = True
 
-                oColumnChk = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(8), SAPbouiCOM.CheckBoxColumn)
+                oColumnChk = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(9), SAPbouiCOM.CheckBoxColumn)
                 oColumnChk.Editable = False
                 oColumnChk.TitleObject.Caption = "Envio Email"
                 oColumnChk.TitleObject.Sortable = True
 
-                oColumnTxt = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(9), SAPbouiCOM.EditTextColumn)
+                oColumnTxt = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(10), SAPbouiCOM.EditTextColumn)
                 oColumnTxt.Editable = False
                 oColumnTxt.TitleObject.Caption = "Email Facturas "
                 oColumnTxt.TitleObject.Sortable = True
+
+                oColumnTxt = CType(CType(oForm.Items.Item("gridDoc").Specific, SAPbouiCOM.Grid).Columns.Item(11), SAPbouiCOM.EditTextColumn)
+                oColumnTxt.Editable = False
+                oColumnTxt.Visible = False
+                oColumnTxt.TitleObject.Caption = "Tipo"
+                oColumnTxt.TitleObject.Sortable = True
+
+
             End If
         Catch ex As Exception
             objGlobal.Mostrar_Error(ex, EXO_UIAPI.EXO_UIAPI.EXO_TipoMensaje.Excepcion)
@@ -715,13 +806,15 @@ Public Class EXOENVFAC
         Dim sDriver As String = ""
         Dim intImpr As Integer = 0
         Dim intEmail As Integer = 0
+
         Dim iRespuesta As Integer = 0
         Dim sConnection As String = ""
         Dim oLogonProps As NameValuePairs2 = Nothing
+        Dim oUserTable As SAPbobsCOM.UserTable
 
         Try
             For i As Integer = 0 To oForm.DataSources.DataTables.Item("dtDoc").Rows.Count - 1
-                objGlobal.SBOApp.StatusBar.SetText("...Comprobando número de facturas seleccionadas.... " & i + 1 & " de " & oForm.DataSources.DataTables.Item("dtDoc").Rows.Count & "", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+                objGlobal.SBOApp.StatusBar.SetText("...Comprobando número de documentos seleccionadas.... " & i + 1 & " de " & oForm.DataSources.DataTables.Item("dtDoc").Rows.Count & "", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
                 If oForm.DataSources.DataTables.Item("dtDoc").GetValue("Imprimir", i).ToString = "Y" And oForm.DataSources.DataTables.Item("dtDoc").GetValue("Procesar", i).ToString = "Y" Then
                     intImpr = intImpr + 1
                 End If
@@ -731,102 +824,129 @@ Public Class EXOENVFAC
                 End If
             Next
 
-
-
             If intImpr > 0 Or intEmail > 0 Then
 
-                iRespuesta = objGlobal.SBOApp.MessageBox("Se van a imprimir " & intImpr & " Facturas y se van a enviar por email " & intEmail & " Facturas " & vbCrLf & "¿Desea Continuar?", 2, "Ok", "Cancel")
+                iRespuesta = objGlobal.SBOApp.MessageBox("Se van a imprimir " & intImpr & " Documentos y se van a enviar por email " & intEmail & " Documentos " & vbCrLf & "¿Desea Continuar?", 2, "Ok", "Cancel")
                 If iRespuesta = 2 Then
                     Exit Sub
-                End If
-                If oForm.DataSources.DataTables.Item("dtDoc").Rows.Count > 0 Then
-                    objGlobal.SBOApp.StatusBar.SetText("...Estableciendo conexión con el impreso de facturas....", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+                Else
+                    'PREPARAR IMPRESION
+                    For i As Integer = 0 To oForm.DataSources.DataTables.Item("dtDoc").Rows.Count - 1
+                        If oForm.DataSources.DataTables.Item("dtDoc").GetValue("Procesar", i).ToString = "Y" Then
+                            objGlobal.SBOApp.StatusBar.SetText("....Preparando facturas marcadas para tratar.... " & i + 1 & " de " & oForm.DataSources.DataTables.Item("dtDoc").Rows.Count & "", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+                            oUserTable = objGlobal.compañia.UserTables.Item("EXO_INFORMEFACV")
+                            oUserTable.UserFields.Fields.Item("U_EXO_DOCN").Value = oForm.DataSources.DataTables.Item("dtDoc").GetValue("DocNum", i).ToString
+                            oUserTable.UserFields.Fields.Item("U_EXO_MAIL").Value = oForm.DataSources.DataTables.Item("dtDoc").GetValue("EnvEmail", i).ToString
+                            oUserTable.UserFields.Fields.Item("U_EXO_ENVIADO").Value = "N"
+                            oUserTable.UserFields.Fields.Item("U_EXO_FECHA").Value = CDate(Now.ToString("yyyy-MM-dd"))
+                            oUserTable.UserFields.Fields.Item("U_EXO_ERROR").Value = ""
+                            oUserTable.UserFields.Fields.Item("U_EXO_DOCENTRY").Value = oForm.DataSources.DataTables.Item("dtDoc").GetValue("DocEntry", i).ToString
+                            oUserTable.UserFields.Fields.Item("U_EXO_FECHACREACION").Value = CDate(Now.ToString("yyyy-MM-dd"))
+                            oUserTable.UserFields.Fields.Item("U_EXO_OBJTYPE").Value = oForm.DataSources.DataTables.Item("dtDoc").GetValue("Tipo", i).ToString
+                            If oForm.DataSources.DataTables.Item("dtDoc").GetValue("Imprimir", i).ToString = "Y" And oForm.DataSources.DataTables.Item("dtDoc").GetValue("Procesar", i).ToString = "Y" Then
+                                oUserTable.UserFields.Fields.Item("U_EXO_TIPOTRATA").Value = "I"
+                            End If
+                            If oForm.DataSources.DataTables.Item("dtDoc").GetValue("Email", i).ToString = "Y" And oForm.DataSources.DataTables.Item("dtDoc").GetValue("Procesar", i).ToString = "Y" Then
+                                oUserTable.UserFields.Fields.Item("U_EXO_TIPOTRATA").Value = "E"
+                            End If
 
-                    'abro la conexion con el crystal para que el proceso tarde menos
-                    sOutFileName = objGlobal.funcionesUI.refDi.OGEN.valorVariable("EXO_FORMATOFAC")
-                    oReport.Load(sOutFileName)
-                    'objGlobal.SBOApp.StatusBar.SetText("...Fichero : " & sOutFileName, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
-                    'Establecemos las conexiones a la BBDD
-                    'oReport.DataSourceConnections.Clear()
-                    sServer = "192.168.0.97:30013" ' objGlobal.compañia.Server
-                    'sServer = objGlobal.refDi.SQL.dameCadenaConexion.ToString
-                    sBBDD = objGlobal.compañia.CompanyDB
-                    sUser = objGlobal.refDi.SQL.usuarioSQL
-                    sPwd = objGlobal.refDi.SQL.claveSQL
-
-
-                    sDriver = "B1CRHPROXY"
-                    sConnection = "DRIVER={" & sDriver & "};UID=" & sUser & ";PWD=" & sPwd & ";SERVERNODE=" & sServer & ";DATABASENAME=NDB;DATABASE=" & sBBDD & ";"
-
-
-                    'Dim conrepor As CrystalDecisions.Shared.DataSourceConnections = oReport.DataSourceConnections
-                    'conrepor(0).SetConnection(sServer, sBBDD, sUser, sPwd)
-
-
-                    'objGlobal.SBOApp.StatusBar.SetText("...Connection " & sConnection & "....", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
-
-                    oLogonProps = oReport.DataSourceConnections(0).LogonProperties
-                    oLogonProps.Set("Provider", sDriver)
-                    oLogonProps.Set("Connection String", sConnection)
-                    oLogonProps.Set("Provider", sDriver)
-
-                    'objGlobal.SBOApp.StatusBar.SetText("...Después de ologonpropos....", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
-
-                    oReport.DataSourceConnections(0).SetLogonProperties(oLogonProps)
-                    oReport.DataSourceConnections(0).SetConnection(sServer, sBBDD, False)
-
-                    'objGlobal.SBOApp.StatusBar.SetText("...Después de set logon properties....", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
-                    For Each oSubReport As ReportDocument In oReport.Subreports
-                        For Each oConnection As IConnectionInfo In oSubReport.DataSourceConnections
-                            oConnection.SetConnection(sServer, sBBDD, False)
-                            oConnection.SetLogon(sUser, sPwd)
-                        Next
+                            If oUserTable.Add() <> 0 Then
+                                objGlobal.SBOApp.StatusBar.SetText("(EXO) - " & objGlobal.compañia.GetLastErrorCode & " " & objGlobal.compañia.GetLastErrorDescription.Replace("'", ""), SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error)
+                            End If
+                        End If
                     Next
 
-                    'objGlobal.SBOApp.StatusBar.SetText("...Despues de preparar la conexión con el impreso....", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
-
-                    'If Right(objGlobal.pathDLL, 6).ToUpper = "DLL_64" Then
-                    '    sDriver = "{HDBODBC}"
-                    'Else
-                    '    sDriver = "{HDBODBC32}"
-                    'End If
-                    'oReport.ApplyNewServer(sDriver, sServer, sUser, sPwd, sBBDD)
-
                 End If
+                objGlobal.SBOApp.StatusBar.SetText("....Los Documentos han sido marcadas para que el JOB las imprima y envíe por email.... ", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+                'If oForm.DataSources.DataTables.Item("dtDoc").Rows.Count > 0 Then
+                '    objGlobal.SBOApp.StatusBar.SetText("...Estableciendo conexión con el impreso de facturas....", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
 
-                For i As Integer = 0 To oForm.DataSources.DataTables.Item("dtDoc").Rows.Count - 1
-                    objGlobal.SBOApp.StatusBar.SetText("....Comprobando facturas marcadas para tratar.... " & i + 1 & " de " & oForm.DataSources.DataTables.Item("dtDoc").Rows.Count & "", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
-                    If oForm.DataSources.DataTables.Item("dtDoc").GetValue("Procesar", i).ToString = "Y" Then
-                        'impresion directa
-                        If oForm.DataSources.DataTables.Item("dtDoc").GetValue("Imprimir", i).ToString = "Y" Then
-                            'sOutFileName = IO.Path.GetTempPath() & "Doc.rpt"
-                            'GetCrystalReportFile(objGlobal.compañia, CType(oForm.Items.Item("cmbFac").Specific, SAPbouiCOM.ComboBox).Value, sOutFileName)
-                            'sOutFileName = CType(oForm.Items.Item("cmbFac").Specific, SAPbouiCOM.ComboBox).Value
-                            'objGlobal.SBOApp.StatusBar.SetText("....Impriendo factura .... ", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
-                            sOutFileName = objGlobal.funcionesUI.refDi.OGEN.valorVariable("EXO_FORMATOFAC")
-                            'objGlobal.SBOApp.StatusBar.SetText("....Formato factura .... " & sOutFileName & "", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
-                            Imprimir(objGlobal.compañia, sOutFileName, CInt(oForm.DataSources.DataTables.Item("dtDoc").GetValue("DocEntry", i).ToString), oReport)
-                        End If
-
-                        'pdf y envio de email
-                        If oForm.DataSources.DataTables.Item("dtDoc").GetValue("Email", i).ToString = "Y" Then
-                            sOutFileName = objGlobal.funcionesUI.refDi.OGEN.valorVariable("EXO_FORMATOFAC")
-
-                            'objGlobal.SBOApp.StatusBar.SetText("Antes de generar pdf", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
-                            'envio email
-                            'sOutFileName = IO.Path.GetTempPath() & "Doc.rpt"
-                            'GetCrystalReportFile(objGlobal.compañia, CType(oForm.Items.Item("cmbFac").Specific, SAPbouiCOM.ComboBox).Value, sOutFileName)
-                            ' objGlobal.SBOApp.StatusBar.SetText("....Generando factura .... ", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
-                            Try
-                                GenerarPDF(CInt(oForm.DataSources.DataTables.Item("dtDoc").GetValue("DocEntry", i).ToString), i, sOutFileName, oForm.DataSources.DataTables.Item("dtDoc").GetValue("EnvEmail", i).ToString, oForm.DataSources.DataTables.Item("dtDoc").GetValue("DocNum", i).ToString, oReport)
-                            Catch ex As Exception
-
-                            End Try
-                        End If
+                '    'abro la conexion con el crystal para que el proceso tarde menos
+                '    sOutFileName = objGlobal.funcionesUI.refDi.OGEN.valorVariable("EXO_FORMATOFAC")
+                '    oReport.Load(sOutFileName)
+                '    'objGlobal.SBOApp.StatusBar.SetText("...Fichero : " & sOutFileName, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+                '    'Establecemos las conexiones a la BBDD
+                '    'oReport.DataSourceConnections.Clear()
+                '    'sServer = "192.168.0.97:30013" ' objGlobal.compañia.Server 'HURYZA
+                '    sServer = "192.168.142.102:30013" ' objGlobal.compañia.Server 'EXPERTONE HANA
+                '    'sServer = objGlobal.refDi.SQL.dameCadenaConexion.ToString
+                '    sBBDD = objGlobal.compañia.CompanyDB
+                '    sUser = objGlobal.refDi.SQL.usuarioSQL
+                '    sPwd = objGlobal.refDi.SQL.claveSQL
 
 
-                    End If
-                Next
+                '    sDriver = "B1CRHPROXY"
+                '    sConnection = "DRIVER={" & sDriver & "};UID=" & sUser & ";PWD=" & sPwd & ";SERVERNODE=" & sServer & ";DATABASENAME=NDB;DATABASE=" & sBBDD & ";"
+
+
+                '    'Dim conrepor As CrystalDecisions.Shared.DataSourceConnections = oReport.DataSourceConnections
+                '    'conrepor(0).SetConnection(sServer, sBBDD, sUser, sPwd)
+
+
+                '    'objGlobal.SBOApp.StatusBar.SetText("...Connection " & sConnection & "....", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+
+                '    oLogonProps = oReport.DataSourceConnections(0).LogonProperties
+                '    oLogonProps.Set("Provider", sDriver)
+                '    oLogonProps.Set("Connection String", sConnection)
+                '    oLogonProps.Set("Provider", sDriver)
+
+                '    'objGlobal.SBOApp.StatusBar.SetText("...Después de ologonpropos....", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+
+                '    oReport.DataSourceConnections(0).SetLogonProperties(oLogonProps)
+                '    oReport.DataSourceConnections(0).SetConnection(sServer, sBBDD, False)
+
+                '    'objGlobal.SBOApp.StatusBar.SetText("...Después de set logon properties....", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+                '    For Each oSubReport As ReportDocument In oReport.Subreports
+                '        For Each oConnection As IConnectionInfo In oSubReport.DataSourceConnections
+                '            oConnection.SetConnection(sServer, sBBDD, False)
+                '            oConnection.SetLogon(sUser, sPwd)
+                '        Next
+                '    Next
+
+                '    'objGlobal.SBOApp.StatusBar.SetText("...Despues de preparar la conexión con el impreso....", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+
+                '    'If Right(objGlobal.pathDLL, 6).ToUpper = "DLL_64" Then
+                '    '    sDriver = "{HDBODBC}"
+                '    'Else
+                '    '    sDriver = "{HDBODBC32}"
+                '    'End If
+                '    'oReport.ApplyNewServer(sDriver, sServer, sUser, sPwd, sBBDD)
+
+                'End If
+
+                'For i As Integer = 0 To oForm.DataSources.DataTables.Item("dtDoc").Rows.Count - 1
+                '    objGlobal.SBOApp.StatusBar.SetText("....Comprobando facturas marcadas para tratar.... " & i + 1 & " de " & oForm.DataSources.DataTables.Item("dtDoc").Rows.Count & "", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+                '    If oForm.DataSources.DataTables.Item("dtDoc").GetValue("Procesar", i).ToString = "Y" Then
+                '        'impresion directa
+                '        If oForm.DataSources.DataTables.Item("dtDoc").GetValue("Imprimir", i).ToString = "Y" Then
+                '            'sOutFileName = IO.Path.GetTempPath() & "Doc.rpt"
+                '            'GetCrystalReportFile(objGlobal.compañia, CType(oForm.Items.Item("cmbFac").Specific, SAPbouiCOM.ComboBox).Value, sOutFileName)
+                '            'sOutFileName = CType(oForm.Items.Item("cmbFac").Specific, SAPbouiCOM.ComboBox).Value
+                '            'objGlobal.SBOApp.StatusBar.SetText("....Impriendo factura .... ", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+                '            sOutFileName = objGlobal.funcionesUI.refDi.OGEN.valorVariable("EXO_FORMATOFAC")
+                '            'objGlobal.SBOApp.StatusBar.SetText("....Formato factura .... " & sOutFileName & "", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+                '            Imprimir(objGlobal.compañia, sOutFileName, CInt(oForm.DataSources.DataTables.Item("dtDoc").GetValue("DocEntry", i).ToString), oReport)
+                '        End If
+
+                '        'pdf y envio de email
+                '        If oForm.DataSources.DataTables.Item("dtDoc").GetValue("Email", i).ToString = "Y" Then
+                '            sOutFileName = objGlobal.funcionesUI.refDi.OGEN.valorVariable("EXO_FORMATOFAC")
+
+                '            'objGlobal.SBOApp.StatusBar.SetText("Antes de generar pdf", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+                '            'envio email
+                '            'sOutFileName = IO.Path.GetTempPath() & "Doc.rpt"
+                '            'GetCrystalReportFile(objGlobal.compañia, CType(oForm.Items.Item("cmbFac").Specific, SAPbouiCOM.ComboBox).Value, sOutFileName)
+                '            ' objGlobal.SBOApp.StatusBar.SetText("....Generando factura .... ", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+                '            Try
+                '                GenerarPDF(CInt(oForm.DataSources.DataTables.Item("dtDoc").GetValue("DocEntry", i).ToString), i, sOutFileName, oForm.DataSources.DataTables.Item("dtDoc").GetValue("EnvEmail", i).ToString, oForm.DataSources.DataTables.Item("dtDoc").GetValue("DocNum", i).ToString, oReport)
+                '            Catch ex As Exception
+
+                '            End Try
+                '        End If
+
+
+                '    End If
+                'Next
             End If
         Catch ex As Exception
             objGlobal.SBOApp.StatusBar.SetText("Error " & ex.Message, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
@@ -872,7 +992,7 @@ Public Class EXOENVFAC
             '    sDriver = "{B1CRHPROXY32}"
             'End If
 
-
+            oReport.PrintOptions.PrinterName = "NOMBRE"
 
             'oCRReport.ApplyNewServer(sDriver, sServer, sUser, sPwd, sBBDD)
             oReport.PrintToPrinter(1, False, 0, 0)
@@ -958,6 +1078,7 @@ Public Class EXOENVFAC
 
             'Establecemos los parámetros para el report.
             oReport.SetParameterValue("DocKey@", iDocEntry)
+            oReport.SetParameterValue("Schema@", objGlobal.compañia.CompanyDB)
             'oReport.SetParameterValue(2, "13") '"OBJECTID", "13")
 
             'objGlobal.SBOApp.StatusBar.SetText("...despues de oreport set ", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
