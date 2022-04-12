@@ -85,6 +85,10 @@ Public Class EXOENVFAC
         If Not objGlobal.refDi.OGEN.existeVariable("EXO_NOMBREIMPRESORA") Then
             objGlobal.refDi.OGEN.fijarValorVariable("EXO_NOMBREIMPRESORA", "")
         End If
+
+        If Not objGlobal.refDi.OGEN.existeVariable("EXO_PREPARACIONIMPRESION") Then
+            objGlobal.refDi.OGEN.fijarValorVariable("EXO_PREPARACIONIMPRESION", "")
+        End If
     End Sub
 
 #End Region
@@ -831,6 +835,9 @@ Public Class EXOENVFAC
                     Exit Sub
                 Else
                     'PREPARAR IMPRESION
+                    'PONER LA VARIABLE EN ESTADO PREPARACION
+                    objGlobal.refDi.OGEN.fijarValorVariable("EXO_PREPARACIONIMPRESION", "PREPARACION")
+
                     For i As Integer = 0 To oForm.DataSources.DataTables.Item("dtDoc").Rows.Count - 1
                         If oForm.DataSources.DataTables.Item("dtDoc").GetValue("Procesar", i).ToString = "Y" Then
                             objGlobal.SBOApp.StatusBar.SetText("....Preparando facturas marcadas para tratar.... " & i + 1 & " de " & oForm.DataSources.DataTables.Item("dtDoc").Rows.Count & "", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
@@ -858,6 +865,8 @@ Public Class EXOENVFAC
 
                 End If
                 objGlobal.SBOApp.StatusBar.SetText("....Los Documentos han sido marcadas para que el JOB las imprima y envíe por email.... ", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+                'PONER LA VARIABLE EN ESTADO FINALIZADO
+                objGlobal.refDi.OGEN.fijarValorVariable("EXO_PREPARACIONIMPRESION", "FINALIZADO")
                 'If oForm.DataSources.DataTables.Item("dtDoc").Rows.Count > 0 Then
                 '    objGlobal.SBOApp.StatusBar.SetText("...Estableciendo conexión con el impreso de facturas....", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
 
