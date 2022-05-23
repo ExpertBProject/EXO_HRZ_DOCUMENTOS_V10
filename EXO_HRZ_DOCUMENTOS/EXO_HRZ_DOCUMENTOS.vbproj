@@ -79,27 +79,33 @@
     <Reference Include="CrystalDecisions.CrystalReports.Design, Version=13.0.3500.0, Culture=neutral, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL" />
     <Reference Include="CrystalDecisions.CrystalReports.Engine, Version=13.0.3500.0, Culture=neutral, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL" />
     <Reference Include="CrystalDecisions.Shared, Version=13.0.3500.0, Culture=neutral, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL" />
-    <Reference Include="EXO_BasicDLL">
-      <HintPath>..\..\..\..\..\EXO_Kernel_10.0.1.4\x64\desarrollo\EXO_BasicDLL.dll</HintPath>
-    </Reference>
-    <Reference Include="EXO_CleanCOM">
-      <HintPath>..\..\..\..\..\EXO_Kernel_10.0.1.4\x64\desarrollo\EXO_CleanCOM.dll</HintPath>
-    </Reference>
-    <Reference Include="EXO_DIAPI">
-      <HintPath>..\..\..\..\..\EXO_Kernel_10.0.1.4\x64\desarrollo\EXO_DIAPI.dll</HintPath>
-    </Reference>
-    <Reference Include="EXO_Generales">
-      <HintPath>..\..\..\..\..\EXO_Kernel_10.0.1.4\x64\desarrollo\EXO_Generales.dll</HintPath>
-    </Reference>
-    <Reference Include="EXO_Log">
-      <HintPath>..\..\..\..\..\EXO_Kernel_10.0.1.4\x64\desarrollo\EXO_Log.dll</HintPath>
-    </Reference>
-    <Reference Include="EXO_UIAPI">
-      <HintPath>..\..\..\..\..\EXO_Kernel_10.0.1.4\x64\desarrollo\EXO_UIAPI.dll</HintPath>
-    </Reference>
-    <Reference Include="Sap.Data.Hana.v4.5, Version=1.0.120.0, Culture=neutral, PublicKeyToken=0326b8ea63db4bc4, processorArchitecture=MSIL">
+    <Reference Include="EXO_BasicDLL, Version=10.0.1.4, Culture=neutral, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\Cliente\9.1.0.43\x64\Sap.Data.Hana.v4.5.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\EXO_Kernel_10.0.1.8\x64\EXO_BasicDLL.dll</HintPath>
+    </Reference>
+    <Reference Include="EXO_CleanCOM, Version=10.0.1.4, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\EXO_Kernel_10.0.1.8\x64\EXO_CleanCOM.dll</HintPath>
+    </Reference>
+    <Reference Include="EXO_DIAPI, Version=10.0.1.4, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\EXO_Kernel_10.0.1.8\x64\EXO_DIAPI.dll</HintPath>
+    </Reference>
+    <Reference Include="EXO_Generales, Version=10.0.1.4, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\EXO_Kernel_10.0.1.8\x64\EXO_Generales.dll</HintPath>
+    </Reference>
+    <Reference Include="EXO_Log, Version=10.0.1.4, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\EXO_Kernel_10.0.1.8\x64\EXO_Log.dll</HintPath>
+    </Reference>
+    <Reference Include="EXO_UIAPI, Version=10.0.1.4, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\EXO_Kernel_10.0.1.8\x64\EXO_UIAPI.dll</HintPath>
+    </Reference>
+    <Reference Include="Sap.Data.Hana.v4.5, Version=2.7.26.0, Culture=neutral, PublicKeyToken=0326b8ea63db4bc4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\EXO_Kernel_10.0.1.8\x64\Sap.Data.Hana.v4.5.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -231,8 +237,9 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy "E:\Desarrollo\Usuarios\shernandez\GIT\HURYZA_V10\EXO_HRZ_DOCUMENTOS_V10\EXO_HRZ_DOCUMENTOS\bin\x64\Debug\EXO_HRZ_DOCUMENTOS.dll" "E:\Desarrollo\Usuarios\shernandez\EXO_Kernel_10.0.1.4\x64\desarrollo\DLLs\$(TargetFileName)"
-copy "E:\Desarrollo\Usuarios\shernandez\GIT\HURYZA_V10\EXO_HRZ_DOCUMENTOS_V10\EXO_HRZ_DOCUMENTOS\bin\x64\Debug\EXO_HRZ_DOCUMENTOS.dll" "E:\Desarrollo\Ficheros\10.Dll_64\DLLs\$(TargetFileName)"
+    <PostBuildEvent>copy $(TargetPath) "E:\Desarrollo\Ficheros\10.Dll_64\EXT\$(TargetFileName)"
+copy $(TargetPath) "E:\Desarrollo\Usuarios\shernandez\EXO_Kernel_10.0.1.8\x64\DLLs\$(TargetFileName)"
+copy $(TargetPath) "E:\Desarrollo\EXO_Kernel_10.0.1.8\x64\DLLs\$(TargetFileName)"
 
 </PostBuildEvent>
   </PropertyGroup>
