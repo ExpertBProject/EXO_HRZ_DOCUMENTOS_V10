@@ -235,6 +235,10 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
   </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="SQL\CREATE_TABLE_STOCKALM.sql" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy $(TargetPath) "E:\Desarrollo\Ficheros\10.Dll_64\EXT\$(TargetFileName)"

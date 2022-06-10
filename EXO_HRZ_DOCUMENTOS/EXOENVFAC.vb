@@ -18,6 +18,7 @@ Public Class EXOENVFAC
             cargaDatos()
             cargaAutorizaciones()
             ParametrizacionGeneral()
+            CargarScripts()
         End If
     End Sub
 
@@ -90,7 +91,21 @@ Public Class EXOENVFAC
             objGlobal.refDi.OGEN.fijarValorVariable("EXO_PREPARACIONIMPRESION", "")
         End If
     End Sub
+    Private Sub CargarScripts()
+        Dim sScript As String = ""
 
+        If objGlobal.refDi.comunes.esAdministrador Then
+            Try
+                sScript = objGlobal.funciones.leerEmbebido(Me.GetType(), "CREATE_TABLE_STOCKALM.sql")
+                objGlobal.refDi.SQL.executeNonQuery(sScript)
+            Catch exCOM As System.Runtime.InteropServices.COMException
+                Throw exCOM
+            Catch ex As Exception
+                Throw ex
+            End Try
+
+        End If
+    End Sub
 #End Region
 #Region "Eventos"
 
