@@ -3,7 +3,7 @@ Imports SAPbouiCOM
 
 Public Class SAP_OPOR
     Inherits EXO_UIAPI.EXO_DLLBase
-    Dim _iLineNumRightClick As Integer = 0
+    Dim _iLineNumRightClick As Integer = -1
     Public Sub New(ByRef oObjGlobal As EXO_UIAPI.EXO_UIAPI, ByRef actualizar As Boolean, usaLicencia As Boolean, idAddOn As Integer)
         MyBase.New(oObjGlobal, actualizar, usaLicencia, idAddOn)
         If actualizar Then
@@ -40,6 +40,67 @@ Public Class SAP_OPOR
 #End Region
 
 #Region "Eventos"
+    Public Overrides Function SBOApp_FormDataEvent(ByVal infoEvento As BusinessObjectInfo) As Boolean
+        Dim oForm As SAPbouiCOM.Form = Nothing
+        Dim sDocEntry As String = "0"
+        Dim oXml As New Xml.XmlDocument
+        Dim bolModificar As Boolean = True
+        Try
+            If infoEvento.BeforeAction = True Then
+                Select Case infoEvento.FormTypeEx
+                    Case "142"
+                        Select Case infoEvento.EventType
+
+                            Case SAPbouiCOM.BoEventTypes.et_FORM_DATA_LOAD
+
+                            Case SAPbouiCOM.BoEventTypes.et_FORM_DATA_UPDATE
+                                'antes de actualizar comprobar si el pedido es con destino
+                                oForm = objGlobal.SBOApp.Forms.Item(infoEvento.FormUID)
+
+                            Case SAPbouiCOM.BoEventTypes.et_FORM_DATA_ADD
+
+                            Case SAPbouiCOM.BoEventTypes.et_FORM_DATA_DELETE
+
+                        End Select
+
+                End Select
+
+            Else
+
+                Select Case infoEvento.FormTypeEx
+                    Case "142"
+                        Select Case infoEvento.EventType
+
+                            Case SAPbouiCOM.BoEventTypes.et_FORM_DATA_LOAD
+
+
+                            Case SAPbouiCOM.BoEventTypes.et_FORM_DATA_UPDATE
+
+                            Case SAPbouiCOM.BoEventTypes.et_FORM_DATA_ADD
+
+
+                            Case SAPbouiCOM.BoEventTypes.et_FORM_DATA_LOAD
+
+                        End Select
+
+                End Select
+
+            End If
+
+            Return MyBase.SBOApp_FormDataEvent(infoEvento)
+
+        Catch exCOM As System.Runtime.InteropServices.COMException
+            objGlobal.Mostrar_Error(exCOM, EXO_UIAPI.EXO_UIAPI.EXO_TipoMensaje.Excepcion)
+
+            Return False
+        Catch ex As Exception
+            objGlobal.Mostrar_Error(ex, EXO_UIAPI.EXO_UIAPI.EXO_TipoMensaje.Excepcion)
+
+            Return False
+        Finally
+            EXO_CleanCOM.CLiberaCOM.Form(oForm)
+        End Try
+    End Function
 
     'Public Overrides Function SBOApp_FormDataEvent(ByVal infoEvento As BusinessObjectInfo) As Boolean
     '    Dim oForm As SAPbouiCOM.Form = Nothing
@@ -792,181 +853,6 @@ Public Class SAP_OPOR
             If oMessageService IsNot Nothing Then System.Runtime.InteropServices.Marshal.FinalReleaseComObject(oMessageService)
             If oMessage IsNot Nothing Then System.Runtime.InteropServices.Marshal.FinalReleaseComObject(oMessage)
             EXO_CleanCOM.CLiberaCOM.liberaCOM(CType(oRs, Object))
-
-        End Try
-    End Function
-
-    Public Sub GrabarStock(ByRef oForm As SAPbouiCOM.Form, ByRef sObjType As String)
-
-        Dim oRs As SAPbobsCOM.Recordset = Nothing
-        Dim oRsCrear As SAPbobsCOM.Recordset = Nothing
-        Dim oRsStock As SAPbobsCOM.Recordset = Nothing
-        Dim oXml As System.Xml.XmlDocument = New System.Xml.XmlDocument
-        Dim oNodes As System.Xml.XmlNodeList = Nothing
-        Dim oNode As System.Xml.XmlNode = Nothing
-        Dim NumLin As Integer = 0
-        Dim DocNum As Integer = 0
-        Dim sCodart As String = ""
-        Dim sCodAlm As String = ""
-        Try
-            Dim sSql As String = ""
-
-            Dim dblStockAlm As Double = 0
-            Dim dblStockTot As Double = 0
-
-            oRs = CType(objGlobal.compañia.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset), SAPbobsCOM.Recordset)
-            oRsCrear = CType(objGlobal.compañia.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset), SAPbobsCOM.Recordset)
-            oRsStock = CType(objGlobal.compañia.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset), SAPbobsCOM.Recordset)
-
-            DocNum = CInt(CType(oForm.Items.Item("8").Specific, SAPbouiCOM.EditText).Value)
-            'sObjType = oForm.TypeEx
-            NumLin = CInt(CType(CType(oForm.Items.Item("38").Specific, SAPbouiCOM.Matrix).Columns.Item("110").Cells.Item(_iLineNumRightClick).Specific, SAPbouiCOM.EditText).Value)
-            sCodart = CType(CType(oForm.Items.Item("38").Specific, SAPbouiCOM.Matrix).Columns.Item("1").Cells.Item(_iLineNumRightClick).Specific, SAPbouiCOM.EditText).Value
-            sCodAlm = CType(CType(oForm.Items.Item("38").Specific, SAPbouiCOM.Matrix).Columns.Item("24").Cells.Item(_iLineNumRightClick).Specific, SAPbouiCOM.EditText).Value
-            'sSql = "SELECT *
-            'FROM ""STOCKALM""
-            'WHERE ""OBJTYPE"" ='" & sObjType & "' AND ""DOCNUM"" =" & DocNum & " AND ""LINENUM""=" & NumLin & ""
-
-            'delete
-            sSql = "DELETE FROM ""STOCKALM"" WHERE   ""OBJTYPE"" ='" & sObjType & "' AND ""DOCNUM"" =" & DocNum & " AND ""LINENUM""=" & NumLin & ""
-            oRsCrear.DoQuery(sSql)
-
-            'cargar stock
-            sSql = "SELECT T0.""ItemCode"", T0.""WhsCode"", T0.""OnHand"" FROM OITW T0 WHERE T0.""Locked"" ='N' and ""ItemCode"" ='" & sCodart & "'"
-            oRsStock.DoQuery(sSql)
-            oXml.LoadXml(oRsStock.GetAsXML())
-            oNodes = oXml.SelectNodes("//row")
-
-            If oRsStock.RecordCount > 0 Then
-                For i As Integer = 0 To oNodes.Count - 1
-                    oNode = oNodes.Item(i)
-
-                    'insert
-                    sSql = "INSERT INTO ""STOCKALM"" (""OBJTYPE"",""DOCNUM"",""LINENUM"",""ITEMCODE"",""WHSCODE"",""STOCKALM"",""STOCKTOT"") 
-                    VALUES ('" & sObjType & "'," & DocNum & "," & NumLin & ",'" & sCodart & "', '" & oNode.SelectSingleNode("WhsCode").InnerText.ToString & "'," & CDbl(oNode.SelectSingleNode("OnHand").InnerText.ToString.Replace(".", ",")) & ", " & CDbl(oNode.SelectSingleNode("OnHand").InnerText.ToString.Replace(".", ",")) & ")"
-                    oRsCrear.DoQuery(sSql)
-                Next
-
-            End If
-
-
-
-
-
-        Catch exCOM As System.Runtime.InteropServices.COMException
-            objGlobal.Mostrar_Error(exCOM, EXO_UIAPI.EXO_UIAPI.EXO_TipoMensaje.Excepcion)
-        Catch ex As Exception
-            objGlobal.Mostrar_Error(ex, EXO_UIAPI.EXO_UIAPI.EXO_TipoMensaje.Excepcion)
-        Finally
-
-            EXO_CleanCOM.CLiberaCOM.liberaCOM(CType(oForm, Object))
-            EXO_CleanCOM.CLiberaCOM.liberaCOM(CType(oRs, Object))
-        End Try
-    End Sub
-
-    Public Overrides Function SBOApp_RightClickEvent(ByVal infoEvento As ContextMenuInfo) As Boolean
-        Dim oForm As SAPbouiCOM.Form = Nothing
-        Dim oCreationPackage As SAPbouiCOM.MenuCreationParams = Nothing
-        Dim oMenuItem As SAPbouiCOM.MenuItem = Nothing
-        Dim oMenus As SAPbouiCOM.Menus = Nothing
-
-        Try
-            oForm = objGlobal.SBOApp.Forms.Item(infoEvento.FormUID)
-
-            If infoEvento.BeforeAction = False Then
-                Select Case oForm.TypeEx
-                    Case "142"
-                        If objGlobal.SBOApp.Menus.Exists("EXO_MNUSTOCK") Then
-                            objGlobal.SBOApp.Menus.RemoveEx("EXO_MNUSTOCK")
-                        End If
-
-                End Select
-
-            Else
-
-                Select Case oForm.TypeEx
-                    Case "142"
-                        If infoEvento.ItemUID = "38" Then
-                            If infoEvento.Row >= 0 Then
-                                'oForm.DataSources.UserDataSources.Item("LineRight").ValueEx = infoEvento.Row.ToString
-                                _iLineNumRightClick = infoEvento.Row
-                                If Not objGlobal.SBOApp.Menus.Exists("EXO_MNUSTOCK") Then
-                                    oCreationPackage = CType(objGlobal.SBOApp.CreateObject(SAPbouiCOM.BoCreatableObjectType.cot_MenuCreationParams), SAPbouiCOM.MenuCreationParams)
-
-                                    oCreationPackage.Type = SAPbouiCOM.BoMenuType.mt_STRING
-                                    oCreationPackage.UniqueID = "EXO_MNUSTOCK"
-                                    oCreationPackage.String = "Consultar Stock”
-                                    oCreationPackage.Enabled = True
-
-                                    oMenuItem = objGlobal.SBOApp.Menus.Item("1280") 'Data'
-                                    oMenus = oMenuItem.SubMenus
-                                    oMenus.AddEx(oCreationPackage)
-                                End If
-
-                            End If
-                        End If
-
-                End Select
-
-            End If
-
-            Return MyBase.SBOApp_RightClickEvent(infoEvento)
-
-        Catch exCOM As System.Runtime.InteropServices.COMException
-            objGlobal.Mostrar_Error(exCOM, EXO_UIAPI.EXO_UIAPI.EXO_TipoMensaje.Excepcion)
-            Return False
-        Catch ex As Exception
-            objGlobal.Mostrar_Error(ex, EXO_UIAPI.EXO_UIAPI.EXO_TipoMensaje.Excepcion)
-            Return False
-        Finally
-            EXO_CleanCOM.CLiberaCOM.MenuItem(oMenuItem)
-            EXO_CleanCOM.CLiberaCOM.Menus(oMenus)
-            EXO_CleanCOM.CLiberaCOM.MenuCreation(oCreationPackage)
-            EXO_CleanCOM.CLiberaCOM.Form(oForm)
-        End Try
-    End Function
-
-    Public Overrides Function SBOApp_MenuEvent(ByVal infoEvento As MenuEvent) As Boolean
-        Dim oForm As SAPbouiCOM.Form = Nothing
-        Dim sMensaje As String = ""
-
-
-        Try
-            oForm = objGlobal.SBOApp.Forms.ActiveForm
-            If infoEvento.BeforeAction = True Then
-
-            Else
-                Select Case infoEvento.MenuUID
-                    Case "EXO_MNUSTOCK"
-                        If _iLineNumRightClick > 0 Then
-                            GrabarStock(oForm, "22")
-
-
-                            'If File.Exists(sRuta) Then
-
-                            '    Process.Start(sRuta)
-                            'Else
-                            '    sMensaje = "No existe ruta de excel para esa línea"
-                            '    objGlobal.SBOApp.StatusBar.SetText("(EXO) - " & sMensaje, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning)
-                            '    objGlobal.SBOApp.MessageBox(sMensaje)
-                            'End If
-
-                        Else
-                            sMensaje = "Tiene que seleccionar una línea."
-                            objGlobal.SBOApp.StatusBar.SetText("(EXO) - " & sMensaje, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning)
-                            objGlobal.SBOApp.MessageBox(sMensaje)
-                        End If
-
-
-                End Select
-            End If
-
-            Return True
-
-        Catch ex As Exception
-            objGlobal.Mostrar_Error(ex, EXO_UIAPI.EXO_UIAPI.EXO_TipoMensaje.Excepcion)
-            Return False
-        Finally
 
         End Try
     End Function

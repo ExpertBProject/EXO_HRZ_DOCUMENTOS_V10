@@ -133,6 +133,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CRExtension.vb" />
+    <Compile Include="EXOCONSTOCK.vb" />
     <Compile Include="EXOENVFAC.vb" />
     <Compile Include="EXO_CONFMAILS.vb" />
     <Compile Include="EXO_CONFTRASDOC.vb" />
@@ -151,6 +152,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="SAP_STOCK.vb" />
     <Compile Include="SAP_OPOR.vb" />
   </ItemGroup>
   <ItemGroup>
@@ -235,7 +237,9 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Pantallas\EXOCONSTOCK.srf" />
+  </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="SQL\CREATE_TABLE_STOCKALM.sql" />
   </ItemGroup>
