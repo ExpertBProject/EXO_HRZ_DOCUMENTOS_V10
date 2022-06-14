@@ -278,7 +278,7 @@ Public Class SAP_STOCK
             'sObjType = oForm.TypeEx
             If _iLineNumRightClick = -1 Then
                 'todas las lineas
-                sSql = "SELECT T0.""DocNum"", T0.""ObjType"", T1.""LineNum"", T1.""ItemCode"", T1.""WhsCode"" FROM ""OPOR"" T0  INNER JOIN ""POR1"" T1 ON T0.""DocEntry"" = T1.""DocEntry"" WHERE t0.""DocEntry"" =" & iDocEntry & ""
+                sSql = "SELECT T0.""DocNum"", T0.""ObjType"", T1.""LineNum"", T1.""ItemCode"", T1.""WhsCode"" FROM """ & sTablaC & """  T0  INNER JOIN  """ & sTablaL & """ T1 ON T0.""DocEntry"" = T1.""DocEntry"" WHERE t0.""DocEntry"" =" & iDocEntry & ""
                 oRs.DoQuery(sSql)
                 oXml.LoadXml(oRs.GetAsXML())
                 oNodes = oXml.SelectNodes("//row")

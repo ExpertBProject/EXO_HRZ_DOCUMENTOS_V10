@@ -170,7 +170,7 @@ Public Class EXOCONSTOCK
         Dim dFechaH As Date = Now.Date : Dim sFechaH As String = ""
         Try
 
-            sSql = "SELECT T0.""ITEMCODE"" ""Número Artículo"", T1.""ItemName"" ""Descripción"", T0.""WHSCODE"" ""Código Almacen"" ,T2.""WhsName"" ""Descripción"",T0.""STOCKALM"" ""Stock"",T0.""STOCKTOT"" ""Stock Total""
+            sSql = "SELECT T0.""ITEMCODE"" ""Número Artículo"", T1.""ItemName"" ""Descripción"", T0.""WHSCODE"" ""Código Almacen"" ,T2.""WhsName"" ""Nombre"", t0.""STOCKALM"" ""Stock"",T0.""STOCKTOT"" ""Stock Total""
             FROM ""STOCKALM"" T0
             LEFT OUTER JOIN ""OITM"" T1 ON T0.""ITEMCODE"" = T1.""ItemCode""
             INNER JOIN ""OWHS"" T2 ON T0.""WHSCODE"" = T2.""WhsCode"""
