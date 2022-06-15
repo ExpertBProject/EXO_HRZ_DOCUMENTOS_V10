@@ -74,27 +74,27 @@ Public Class SAP_STOCK
 
 
                             Case SAPbouiCOM.BoEventTypes.et_FORM_DATA_UPDATE
-                                If infoEvento.ActionSuccess Then
-                                    oForm = objGlobal.SBOApp.Forms.Item(infoEvento.FormUID)
-                                    If bolModificar = True Then
-                                        oForm = objGlobal.SBOApp.Forms.Item(infoEvento.FormUID)
-                                        'creación de pedido de venta en otra emprea
-                                        oXml.LoadXml(infoEvento.ObjectKey)
-                                        sDocEntry = oXml.SelectSingleNode("DocumentParams/DocEntry").InnerText
-                                        GrabarStock(oForm, oForm.BusinessObject.Type, -1, CInt(sDocEntry))
-                                        bolModificar = False
-                                    End If
-                                End If
+                                'If infoEvento.ActionSuccess Then
+                                '    oForm = objGlobal.SBOApp.Forms.Item(infoEvento.FormUID)
+                                '    If bolModificar = True Then
+                                '        oForm = objGlobal.SBOApp.Forms.Item(infoEvento.FormUID)
+                                '        'creación de pedido de venta en otra emprea
+                                '        oXml.LoadXml(infoEvento.ObjectKey)
+                                '        sDocEntry = oXml.SelectSingleNode("DocumentParams/DocEntry").InnerText
+                                '        GrabarStock(oForm, oForm.BusinessObject.Type, -1, CInt(sDocEntry))
+                                '        bolModificar = False
+                                '    End If
+                                'End If
                             Case SAPbouiCOM.BoEventTypes.et_FORM_DATA_ADD
-                                If infoEvento.ActionSuccess Then
-                                    oForm = objGlobal.SBOApp.Forms.Item(infoEvento.FormUID)
-                                    'creación de pedido de venta en otra emprea
-                                    oXml.LoadXml(infoEvento.ObjectKey)
-                                    sDocEntry = oXml.SelectSingleNode("DocumentParams/DocEntry").InnerText
+                                'If infoEvento.ActionSuccess Then
+                                '    oForm = objGlobal.SBOApp.Forms.Item(infoEvento.FormUID)
+                                '    'creación de pedido de venta en otra emprea
+                                '    oXml.LoadXml(infoEvento.ObjectKey)
+                                '    sDocEntry = oXml.SelectSingleNode("DocumentParams/DocEntry").InnerText
 
-                                    GrabarStock(oForm, oForm.BusinessObject.Type, -1, CInt(sDocEntry))
+                                '    GrabarStock(oForm, oForm.BusinessObject.Type, -1, CInt(sDocEntry))
 
-                                End If
+                                'End If
 
                             Case SAPbouiCOM.BoEventTypes.et_FORM_DATA_LOAD
 
@@ -233,133 +233,133 @@ Public Class SAP_STOCK
 #End Region
 #Region "Auxiliares"
 
-    Public Sub GrabarStock(ByRef oForm As SAPbouiCOM.Form, ByRef sObjType As String, ByRef iNumLin As Integer, ByRef iDocEntry As Integer)
+    'Public Sub GrabarStock(ByRef oForm As SAPbouiCOM.Form, ByRef sObjType As String, ByRef iNumLin As Integer, ByRef iDocEntry As Integer)
 
-        Dim oRs As SAPbobsCOM.Recordset = Nothing
-        Dim oRsCrear As SAPbobsCOM.Recordset = Nothing
-        Dim oRsStock As SAPbobsCOM.Recordset = Nothing
-        Dim oXml As System.Xml.XmlDocument = New System.Xml.XmlDocument
-        Dim oNodes As System.Xml.XmlNodeList = Nothing
-        Dim oNode As System.Xml.XmlNode = Nothing
-        Dim oNodes2 As System.Xml.XmlNodeList = Nothing
-        Dim oNode2 As System.Xml.XmlNode = Nothing
-        Dim NumLin As Integer = 0
-        Dim DocNum As String
-        Dim sCodart As String = ""
-        Dim sCodAlm As String = ""
-        Dim sTablaC As String = ""
-        Dim sTablaL As String = ""
+    '    Dim oRs As SAPbobsCOM.Recordset = Nothing
+    '    Dim oRsCrear As SAPbobsCOM.Recordset = Nothing
+    '    Dim oRsStock As SAPbobsCOM.Recordset = Nothing
+    '    Dim oXml As System.Xml.XmlDocument = New System.Xml.XmlDocument
+    '    Dim oNodes As System.Xml.XmlNodeList = Nothing
+    '    Dim oNode As System.Xml.XmlNode = Nothing
+    '    Dim oNodes2 As System.Xml.XmlNodeList = Nothing
+    '    Dim oNode2 As System.Xml.XmlNode = Nothing
+    '    Dim NumLin As Integer = 0
+    '    Dim DocNum As String
+    '    Dim sCodart As String = ""
+    '    Dim sCodAlm As String = ""
+    '    Dim sTablaC As String = ""
+    '    Dim sTablaL As String = ""
 
-        Try
-            Dim sSql As String = ""
+    '    Try
+    '        Dim sSql As String = ""
 
-            Dim dblStockAlm As Double = 0
-            Dim dblStockTot As Double = 0
-            Select Case sObjType
-                Case "17"
-                    sTablaC = "ORDR"
-                    sTablaL = "RDR1"
-                Case "15"
-                    sTablaC = "ODLN"
-                    sTablaL = "DLN1"
-                Case "22"
-                    sTablaC = "OPOR"
-                    sTablaL = "POR1"
-                Case "20"
-                    sTablaC = "OPDN"
-                    sTablaL = "PDN1"
-            End Select
+    '        Dim dblStockAlm As Double = 0
+    '        Dim dblStockTot As Double = 0
+    '        Select Case sObjType
+    '            Case "17"
+    '                sTablaC = "ORDR"
+    '                sTablaL = "RDR1"
+    '            Case "15"
+    '                sTablaC = "ODLN"
+    '                sTablaL = "DLN1"
+    '            Case "22"
+    '                sTablaC = "OPOR"
+    '                sTablaL = "POR1"
+    '            Case "20"
+    '                sTablaC = "OPDN"
+    '                sTablaL = "PDN1"
+    '        End Select
 
-            oRs = CType(objGlobal.compañia.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset), SAPbobsCOM.Recordset)
-            oRsCrear = CType(objGlobal.compañia.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset), SAPbobsCOM.Recordset)
-            oRsStock = CType(objGlobal.compañia.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset), SAPbobsCOM.Recordset)
+    '        oRs = CType(objGlobal.compañia.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset), SAPbobsCOM.Recordset)
+    '        oRsCrear = CType(objGlobal.compañia.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset), SAPbobsCOM.Recordset)
+    '        oRsStock = CType(objGlobal.compañia.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset), SAPbobsCOM.Recordset)
 
-            DocNum = (CType(oForm.Items.Item("8").Specific, SAPbouiCOM.EditText).Value)
-            'sObjType = oForm.TypeEx
-            If _iLineNumRightClick = -1 Then
-                'todas las lineas
-                sSql = "SELECT T0.""DocNum"", T0.""ObjType"", T1.""LineNum"", T1.""ItemCode"", T1.""WhsCode"" FROM """ & sTablaC & """  T0  INNER JOIN  """ & sTablaL & """ T1 ON T0.""DocEntry"" = T1.""DocEntry"" WHERE t0.""DocEntry"" =" & iDocEntry & ""
-                oRs.DoQuery(sSql)
-                oXml.LoadXml(oRs.GetAsXML())
-                oNodes = oXml.SelectNodes("//row")
-                If oRs.RecordCount > 0 Then
-                    For i As Integer = 0 To oNodes.Count - 1
-                        oNode = oNodes.Item(i)
+    '        DocNum = (CType(oForm.Items.Item("8").Specific, SAPbouiCOM.EditText).Value)
+    '        'sObjType = oForm.TypeEx
+    '        If _iLineNumRightClick = -1 Then
+    '            'todas las lineas
+    '            sSql = "SELECT T0.""DocNum"", T0.""ObjType"", T1.""LineNum"", T1.""ItemCode"", T1.""WhsCode"" FROM """ & sTablaC & """  T0  INNER JOIN  """ & sTablaL & """ T1 ON T0.""DocEntry"" = T1.""DocEntry"" WHERE t0.""DocEntry"" =" & iDocEntry & ""
+    '            oRs.DoQuery(sSql)
+    '            oXml.LoadXml(oRs.GetAsXML())
+    '            oNodes = oXml.SelectNodes("//row")
+    '            If oRs.RecordCount > 0 Then
+    '                For i As Integer = 0 To oNodes.Count - 1
+    '                    oNode = oNodes.Item(i)
 
-                        NumLin = CInt(oNode.SelectSingleNode("LineNum").InnerText.ToString)
-                        sCodart = oNode.SelectSingleNode("ItemCode").InnerText.ToString
-                        sCodAlm = oNode.SelectSingleNode("WhsCode").InnerText.ToString
-                        sSql = "SELECT COALESCE(SUM(T0.""OnHand""),0) ""StockTotal"" FROM ""OITW"" T0 WHERE T0.""Locked"" ='N' and ""ItemCode"" ='" & sCodart & "'"
-                        dblStockTot = CDbl(objGlobal.refDi.SQL.sqlStringB1(sSql))
+    '                    NumLin = CInt(oNode.SelectSingleNode("LineNum").InnerText.ToString)
+    '                    sCodart = oNode.SelectSingleNode("ItemCode").InnerText.ToString
+    '                    sCodAlm = oNode.SelectSingleNode("WhsCode").InnerText.ToString
+    '                    sSql = "SELECT COALESCE(SUM(T0.""OnHand""),0) ""StockTotal"" FROM ""OITW"" T0 WHERE T0.""Locked"" ='N' and ""ItemCode"" ='" & sCodart & "'"
+    '                    dblStockTot = CDbl(objGlobal.refDi.SQL.sqlStringB1(sSql))
 
-                        'delete
-                        sSql = "DELETE FROM ""STOCKALM"" WHERE   ""OBJTYPE"" ='" & sObjType & "' AND ""DOCNUM"" =" & DocNum & " AND ""LINENUM""=" & NumLin & ""
-                        oRsCrear.DoQuery(sSql)
+    '                    'delete
+    '                    sSql = "DELETE FROM ""STOCKALM"" WHERE   ""OBJTYPE"" ='" & sObjType & "' AND ""DOCNUM"" =" & DocNum & " AND ""LINENUM""=" & NumLin & ""
+    '                    oRsCrear.DoQuery(sSql)
 
-                        'cargar stock
-                        sSql = "SELECT T0.""ItemCode"", T0.""WhsCode"", T0.""OnHand"" FROM OITW T0 WHERE T0.""Locked"" ='N' and ""ItemCode"" ='" & sCodart & "'"
-                        oRsStock.DoQuery(sSql)
-                        oXml.LoadXml(oRsStock.GetAsXML())
-                        oNodes2 = oXml.SelectNodes("//row")
+    '                    'cargar stock
+    '                    sSql = "SELECT T0.""ItemCode"", T0.""WhsCode"", T0.""OnHand"" FROM OITW T0 WHERE T0.""Locked"" ='N' and ""ItemCode"" ='" & sCodart & "'"
+    '                    oRsStock.DoQuery(sSql)
+    '                    oXml.LoadXml(oRsStock.GetAsXML())
+    '                    oNodes2 = oXml.SelectNodes("//row")
 
-                        If oRsStock.RecordCount > 0 Then
-                            For j As Integer = 0 To oNodes.Count - 1
-                                oNode2 = oNodes2.Item(j)
-                                'insert
-                                sSql = "INSERT INTO ""STOCKALM"" (""OBJTYPE"",""DOCNUM"",""LINENUM"",""ITEMCODE"",""WHSCODE"",""STOCKALM"",""STOCKTOT"") 
-                    VALUES ('" & sObjType & "'," & DocNum & "," & NumLin & ",'" & sCodart & "', '" & oNode2.SelectSingleNode("WhsCode").InnerText.ToString & "'," & CDbl(oNode2.SelectSingleNode("OnHand").InnerText.ToString.Replace(",", ".")) & ", " & CDbl(dblStockTot) & ")"
-                                oRsCrear.DoQuery(sSql)
-                            Next
+    '                    If oRsStock.RecordCount > 0 Then
+    '                        For j As Integer = 0 To oNodes.Count - 1
+    '                            oNode2 = oNodes2.Item(j)
+    '                            'insert
+    '                            sSql = "INSERT INTO ""STOCKALM"" (""OBJTYPE"",""DOCNUM"",""LINENUM"",""ITEMCODE"",""WHSCODE"",""STOCKALM"",""STOCKTOT"") 
+    '                VALUES ('" & sObjType & "'," & DocNum & "," & NumLin & ",'" & sCodart & "', '" & oNode2.SelectSingleNode("WhsCode").InnerText.ToString & "'," & CDbl(oNode2.SelectSingleNode("OnHand").InnerText.ToString.Replace(".", ",")) & ", " & CDbl(dblStockTot) & ")"
+    '                            oRsCrear.DoQuery(sSql)
+    '                        Next
 
-                        End If
-                    Next
-                End If
-            Else
+    '                    End If
+    '                Next
+    '            End If
+    '        Else
 
-                NumLin = CInt(CType(CType(oForm.Items.Item("38").Specific, SAPbouiCOM.Matrix).Columns.Item("110").Cells.Item(_iLineNumRightClick).Specific, SAPbouiCOM.EditText).Value)
-                sCodart = CType(CType(oForm.Items.Item("38").Specific, SAPbouiCOM.Matrix).Columns.Item("1").Cells.Item(_iLineNumRightClick).Specific, SAPbouiCOM.EditText).Value
-                sCodAlm = CType(CType(oForm.Items.Item("38").Specific, SAPbouiCOM.Matrix).Columns.Item("24").Cells.Item(_iLineNumRightClick).Specific, SAPbouiCOM.EditText).Value
+    '            NumLin = CInt(CType(CType(oForm.Items.Item("38").Specific, SAPbouiCOM.Matrix).Columns.Item("110").Cells.Item(_iLineNumRightClick).Specific, SAPbouiCOM.EditText).Value)
+    '            sCodart = CType(CType(oForm.Items.Item("38").Specific, SAPbouiCOM.Matrix).Columns.Item("1").Cells.Item(_iLineNumRightClick).Specific, SAPbouiCOM.EditText).Value
+    '            sCodAlm = CType(CType(oForm.Items.Item("38").Specific, SAPbouiCOM.Matrix).Columns.Item("24").Cells.Item(_iLineNumRightClick).Specific, SAPbouiCOM.EditText).Value
 
-                sSql = "SELECT COALESCE(SUM(T0.""OnHand""),0) ""StockTotal"" FROM ""OITW"" T0 WHERE T0.""Locked"" ='N' and ""ItemCode"" ='" & sCodart & "'"
-                dblStockTot = CDbl(objGlobal.refDi.SQL.sqlStringB1(sSql))
+    '            sSql = "SELECT COALESCE(SUM(T0.""OnHand""),0) ""StockTotal"" FROM ""OITW"" T0 WHERE T0.""Locked"" ='N' and ""ItemCode"" ='" & sCodart & "'"
+    '            dblStockTot = CDbl(objGlobal.refDi.SQL.sqlStringB1(sSql))
 
-                'delete
-                sSql = "DELETE FROM ""STOCKALM"" WHERE   ""OBJTYPE"" ='" & sObjType & "' AND ""DOCNUM"" =" & DocNum & " AND ""LINENUM""=" & NumLin & ""
-                oRsCrear.DoQuery(sSql)
+    '            'delete
+    '            sSql = "DELETE FROM ""STOCKALM"" WHERE   ""OBJTYPE"" ='" & sObjType & "' AND ""DOCNUM"" =" & DocNum & " AND ""LINENUM""=" & NumLin & ""
+    '            oRsCrear.DoQuery(sSql)
 
-                'cargar stock
-                sSql = "SELECT T0.""ItemCode"", T0.""WhsCode"", T0.""OnHand"" FROM OITW T0 WHERE T0.""Locked"" ='N' and ""ItemCode"" ='" & sCodart & "'"
-                oRsStock.DoQuery(sSql)
-                oXml.LoadXml(oRsStock.GetAsXML())
-                oNodes = oXml.SelectNodes("//row")
+    '            'cargar stock
+    '            sSql = "SELECT T0.""ItemCode"", T0.""WhsCode"", T0.""OnHand"" FROM OITW T0 WHERE T0.""Locked"" ='N' and ""ItemCode"" ='" & sCodart & "'"
+    '            oRsStock.DoQuery(sSql)
+    '            oXml.LoadXml(oRsStock.GetAsXML())
+    '            oNodes = oXml.SelectNodes("//row")
 
-                If oRsStock.RecordCount > 0 Then
-                    For i As Integer = 0 To oNodes.Count - 1
-                        oNode = oNodes.Item(i)
-                        'insert
-                        sSql = "INSERT INTO ""STOCKALM"" (""OBJTYPE"",""DOCNUM"",""LINENUM"",""ITEMCODE"",""WHSCODE"",""STOCKALM"",""STOCKTOT"") 
-                    VALUES ('" & sObjType & "'," & DocNum & "," & NumLin & ",'" & sCodart & "', '" & oNode.SelectSingleNode("WhsCode").InnerText.ToString & "'," & CDbl(oNode.SelectSingleNode("OnHand").InnerText.ToString.Replace(",", ".")) & ", " & CDbl(dblStockTot) & ")"
-                        oRsCrear.DoQuery(sSql)
-                    Next
+    '            If oRsStock.RecordCount > 0 Then
+    '                For i As Integer = 0 To oNodes.Count - 1
+    '                    oNode = oNodes.Item(i)
+    '                    'insert
+    '                    sSql = "INSERT INTO ""STOCKALM"" (""OBJTYPE"",""DOCNUM"",""LINENUM"",""ITEMCODE"",""WHSCODE"",""STOCKALM"",""STOCKTOT"") 
+    '                VALUES ('" & sObjType & "'," & DocNum & "," & NumLin & ",'" & sCodart & "', '" & oNode.SelectSingleNode("WhsCode").InnerText.ToString & "'," & CDbl(oNode.SelectSingleNode("OnHand").InnerText.ToString.Replace(".", ",")) & ", " & CDbl(dblStockTot) & ")"
+    '                    oRsCrear.DoQuery(sSql)
+    '                Next
 
-                End If
-            End If
-
-
+    '            End If
+    '        End If
 
 
-        Catch exCOM As System.Runtime.InteropServices.COMException
-            objGlobal.Mostrar_Error(exCOM, EXO_UIAPI.EXO_UIAPI.EXO_TipoMensaje.Excepcion)
-        Catch ex As Exception
-            objGlobal.Mostrar_Error(ex, EXO_UIAPI.EXO_UIAPI.EXO_TipoMensaje.Excepcion)
-        Finally
 
-            'EXO_CleanCOM.CLiberaCOM.liberaCOM(CType(oForm, Object))
-            EXO_CleanCOM.CLiberaCOM.liberaCOM(CType(oRs, Object))
-            EXO_CleanCOM.CLiberaCOM.liberaCOM(CType(oRsCrear, Object))
-            EXO_CleanCOM.CLiberaCOM.liberaCOM(CType(oRsStock, Object))
-        End Try
-    End Sub
+
+    '    Catch exCOM As System.Runtime.InteropServices.COMException
+    '        objGlobal.Mostrar_Error(exCOM, EXO_UIAPI.EXO_UIAPI.EXO_TipoMensaje.Excepcion)
+    '    Catch ex As Exception
+    '        objGlobal.Mostrar_Error(ex, EXO_UIAPI.EXO_UIAPI.EXO_TipoMensaje.Excepcion)
+    '    Finally
+
+    '        'EXO_CleanCOM.CLiberaCOM.liberaCOM(CType(oForm, Object))
+    '        EXO_CleanCOM.CLiberaCOM.liberaCOM(CType(oRs, Object))
+    '        EXO_CleanCOM.CLiberaCOM.liberaCOM(CType(oRsCrear, Object))
+    '        EXO_CleanCOM.CLiberaCOM.liberaCOM(CType(oRsStock, Object))
+    '    End Try
+    'End Sub
 
     Public Sub AbrirStock(ByRef oForm As SAPbouiCOM.Form, ByRef sObjType As String)
 
@@ -371,8 +371,8 @@ Public Class SAP_STOCK
         Dim sSQL As String = ""
         Dim oFP As SAPbouiCOM.FormCreationParams = Nothing
         Dim EXO_Xml As New EXO_UIAPI.EXO_XML(objGlobal)
-        Dim NumLin As Integer = 0
-        Dim sObjType As String
+        'Dim NumLin As Integer = 0
+        'Dim sObjType As String
         Dim oForm2 As SAPbouiCOM.Form = Nothing
 
         OpenForm = False
@@ -386,12 +386,12 @@ Public Class SAP_STOCK
 
                 oForm = objGlobal.SBOApp.Forms.AddEx(oFP)
                 oForm2 = objGlobal.SBOApp.Forms.ActiveForm
-                sObjType = oForm2.BusinessObject.Type
-                NumLin = CInt(CType(CType(oForm2.Items.Item("38").Specific, SAPbouiCOM.Matrix).Columns.Item("110").Cells.Item(_iLineNumRightClick).Specific, SAPbouiCOM.EditText).Value)
-                oForm.DataSources.UserDataSources.Item("UDDOCNUM").ValueEx = CType(oForm2.Items.Item("8").Specific, SAPbouiCOM.EditText).Value
-                oForm.DataSources.UserDataSources.Item("UDLINENUM").ValueEx = (CType(CType(oForm2.Items.Item("38").Specific, SAPbouiCOM.Matrix).Columns.Item("110").Cells.Item(_iLineNumRightClick).Specific, SAPbouiCOM.EditText).Value)
-                oForm.DataSources.UserDataSources.Item("UDTYPE").Value = sObjType
-
+                'sObjType = oForm2.BusinessObject.Type
+                'NumLin = CInt(CType(CType(oForm2.Items.Item("38").Specific, SAPbouiCOM.Matrix).Columns.Item("110").Cells.Item(_iLineNumRightClick).Specific, SAPbouiCOM.EditText).Value)
+                'oForm.DataSources.UserDataSources.Item("UDDOCNUM").ValueEx = CType(oForm2.Items.Item("8").Specific, SAPbouiCOM.EditText).Value
+                'oForm.DataSources.UserDataSources.Item("UDLINENUM").ValueEx = (CType(CType(oForm2.Items.Item("38").Specific, SAPbouiCOM.Matrix).Columns.Item("110").Cells.Item(_iLineNumRightClick).Specific, SAPbouiCOM.EditText).Value)
+                'oForm.DataSources.UserDataSources.Item("UDTYPE").Value = sObjType
+                oForm.DataSources.UserDataSources.Item("UDART").ValueEx = (CType(CType(oForm2.Items.Item("38").Specific, SAPbouiCOM.Matrix).Columns.Item("1").Cells.Item(_iLineNumRightClick).Specific, SAPbouiCOM.EditText).Value)
             Catch ex As Exception
                 If ex.Message.StartsWith("Form - already exists") = True Then
                     objGlobal.SBOApp.StatusBar.SetText("El formulario ya está abierto.", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error)
@@ -490,9 +490,9 @@ Public Class SAP_STOCK
                     Case "EXO_MNUSTOCK"
                         If _iLineNumRightClick > 0 Then
                             'si esta en modo consulta, no se graba.
-                            If oForm.Mode = BoFormMode.fm_ADD_MODE Or oForm.Mode = BoFormMode.fm_EDIT_MODE Then
-                                GrabarStock(oForm, oForm.BusinessObject.Type, _iLineNumRightClick, 0)
-                            End If
+                            'If oForm.Mode = BoFormMode.fm_ADD_MODE Or oForm.Mode = BoFormMode.fm_EDIT_MODE Then
+                            '    GrabarStock(oForm, oForm.BusinessObject.Type, _iLineNumRightClick, 0)
+                            'End If
                             AbrirStock(oForm, oForm.BusinessObject.Type)
 
                         Else

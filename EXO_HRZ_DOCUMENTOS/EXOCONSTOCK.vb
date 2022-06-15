@@ -170,13 +170,21 @@ Public Class EXOCONSTOCK
         Dim dFechaH As Date = Now.Date : Dim sFechaH As String = ""
         Try
 
-            sSql = "SELECT T0.""ITEMCODE"" ""Número Artículo"", T1.""ItemName"" ""Descripción"", T0.""WHSCODE"" ""Código Almacen"" ,T2.""WhsName"" ""Nombre"", t0.""STOCKALM"" ""Stock"",T0.""STOCKTOT"" ""Stock Total""
-            FROM ""STOCKALM"" T0
-            LEFT OUTER JOIN ""OITM"" T1 ON T0.""ITEMCODE"" = T1.""ItemCode""
-            INNER JOIN ""OWHS"" T2 ON T0.""WHSCODE"" = T2.""WhsCode"""
-            sSql = sSql & " WHERE  T0.""OBJTYPE"" ='" & oForm.DataSources.UserDataSources.Item("UDTYPE").Value & "'"
-            sSql = sSql & " AND  T0.""DOCNUM"" =" & oForm.DataSources.UserDataSources.Item("UDDOCNUM").Value & ""
-            sSql = sSql & " AND  T0.""LINENUM"" =" & oForm.DataSources.UserDataSources.Item("UDLINENUM").Value & ""
+            sSql = "SELECT T0.""ItemCode"" ""Número Artículo"", T2.""ItemName""  ""Descripción"", T0.""WhsCode"" ""Código Almacen"", T1.""WhsName"" ""Nombre"", T0.""OnHand"" ""Stock"" , 
+            (SELECT SUM(T3.""OnHand"") ""StockTotal"" FROM ""OITW"" T3 WHERE T3.""ItemCode""=T0.""ItemCode"" GROUP BY T3.""ItemCode"") AS ""StockTotal"" 
+            FROM ""OITW"" T0  
+            INNER JOIN ""OWHS"" T1 ON T0.""WhsCode"" = T1.""WhsCode"" 
+            INNER Join ""OITM"" T2 ON T0.""ItemCode"" = T2.""ItemCode"" 
+            WHERE T0.""ItemCode"" ='" & oForm.DataSources.UserDataSources.Item("UDART").Value & "'
+            ORDER BY T0.""WhsCode"""
+
+            'sSql = "Select T0.""ITEMCODE"" ""Número Artículo"", T1.""ItemName"" ""Descripción"", T0.""WHSCODE"" ""Código Almacen"" ,T2.""WhsName"" ""Nombre"", t0.""STOCKALM"" ""Stock"",T0.""STOCKTOT"" ""Stock Total""
+            'FROM ""STOCKALM"" T0
+            'LEFT OUTER JOIN ""OITM"" T1 ON T0.""ITEMCODE"" = T1.""ItemCode""
+            'INNER JOIN ""OWHS"" T2 ON T0.""WHSCODE"" = T2.""WhsCode"""
+            'sSql = sSql & " WHERE  T0.""OBJTYPE"" ='" & oForm.DataSources.UserDataSources.Item("UDTYPE").Value & "'"
+            'sSql = sSql & " AND  T0.""DOCNUM"" =" & oForm.DataSources.UserDataSources.Item("UDDOCNUM").Value & ""
+            'sSql = sSql & " AND  T0.""LINENUM"" =" & oForm.DataSources.UserDataSources.Item("UDLINENUM").Value & ""
 
             'where
             'oForm.DataSources.UserDataSources.Item("CodCli").Value
