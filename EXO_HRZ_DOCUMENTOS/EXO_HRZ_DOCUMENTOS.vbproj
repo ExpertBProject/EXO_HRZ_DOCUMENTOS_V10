@@ -243,6 +243,13 @@
   <ItemGroup>
     <EmbeddedResource Include="SQL\CREATE_TABLE_STOCKALM.sql" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="XML_BD\UDFs_OINV.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="SQL\UPDATE_VIAPAGO.sql" />
+    <Content Include="SQL\_98_EXO_CHK_OINV.sql" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy $(TargetPath) "E:\Desarrollo\Ficheros\10.Dll_64\EXT\$(TargetFileName)"

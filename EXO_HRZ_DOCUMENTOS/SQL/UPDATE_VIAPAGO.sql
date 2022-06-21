@@ -1,0 +1,4 @@
+UPDATE T0 SET "U_EXO_VPAGO" = T1."Descript"
+FROM OINV T0  
+INNER JOIN OPYM T1 ON T0."PeyMethod" = T1."PayMethCod"
+WHERE COALESCE("U_EXO_VPAGO",'') =''

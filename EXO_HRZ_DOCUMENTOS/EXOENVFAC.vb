@@ -50,7 +50,12 @@ Public Class EXOENVFAC
             sXML = objGlobal.funciones.leerEmbebido(Me.GetType(), "UT_EXO_INFORMEFACV.xml")
             objGlobal.refDi.comunes.LoadBDFromXML(sXML)
             objGlobal.SBOApp.StatusBar.SetText("Validando:  UT_EXO_INFORMEFACV", SAPbouiCOM.BoMessageTime.bmt_Medium, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+            res = objGlobal.SBOApp.GetLastBatchResults
 
+            sXML = objGlobal.funciones.leerEmbebido(Me.GetType(), "UDFs_OUSR.xml")
+            objGlobal.refDi.comunes.LoadBDFromXML(sXML)
+            objGlobal.SBOApp.StatusBar.SetText("Validando:  UDFs_OUSR", SAPbouiCOM.BoMessageTime.bmt_Medium, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+            res = objGlobal.SBOApp.GetLastBatchResults
 
             sXML = objGlobal.funciones.leerEmbebido(Me.GetType(), "UDFs_OUSR.xml")
             objGlobal.refDi.comunes.LoadBDFromXML(sXML)
