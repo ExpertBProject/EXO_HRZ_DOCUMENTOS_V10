@@ -57,9 +57,9 @@ Public Class EXOENVFAC
             objGlobal.SBOApp.StatusBar.SetText("Validando:  UDFs_OUSR", SAPbouiCOM.BoMessageTime.bmt_Medium, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
             res = objGlobal.SBOApp.GetLastBatchResults
 
-            sXML = objGlobal.funciones.leerEmbebido(Me.GetType(), "UDFs_OUSR.xml")
+            sXML = objGlobal.funciones.leerEmbebido(Me.GetType(), "UDFs_OINV.xml")
             objGlobal.refDi.comunes.LoadBDFromXML(sXML)
-            objGlobal.SBOApp.StatusBar.SetText("Validando:  UDFs_OUSR", SAPbouiCOM.BoMessageTime.bmt_Medium, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
+            objGlobal.SBOApp.StatusBar.SetText("Validando:  UDFs_OINV", SAPbouiCOM.BoMessageTime.bmt_Medium, SAPbouiCOM.BoStatusBarMessageType.smt_Success)
             res = objGlobal.SBOApp.GetLastBatchResults
         End If
     End Sub
