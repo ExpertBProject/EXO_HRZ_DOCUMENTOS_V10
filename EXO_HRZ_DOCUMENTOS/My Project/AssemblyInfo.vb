@@ -12,7 +12,7 @@ Imports System.Runtime.InteropServices
 <Assembly: AssemblyDescription("")>
 <Assembly: AssemblyCompany("")>
 <Assembly: AssemblyProduct("EXO_HRZ_DOCUMENTOS")>
-<Assembly: AssemblyCopyright("Copyright ©  2022")>
+<Assembly: AssemblyCopyright("Copyright ©  2024")>
 <Assembly: AssemblyTrademark("")>
 
 <Assembly: ComVisible(False)>
@@ -31,5 +31,5 @@ Imports System.Runtime.InteropServices
 ' mediante el carácter '*', como se muestra a continuación:
 ' <Assembly: AssemblyVersion("1.0.*")> 
 
-<Assembly: AssemblyVersion("10.1.8.008")>
-<Assembly: AssemblyFileVersion("10.1.8.008")>
+<Assembly: AssemblyVersion("10.1.8.010")>
+<Assembly: AssemblyFileVersion("10.1.8.010")>
