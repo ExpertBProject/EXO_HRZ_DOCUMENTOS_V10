@@ -37,6 +37,8 @@ Public Class EXO_VENTAS
                                 oForm = objGlobal.SBOApp.Forms.Item(infoEvento.FormUID)
                                 If ComprobarAlmacenes(oForm) = False Then
                                     Return False
+                                Else
+                                    Return True
                                 End If
                             Case SAPbouiCOM.BoEventTypes.et_FORM_DATA_DELETE
 
@@ -90,6 +92,8 @@ Public Class EXO_VENTAS
                 Else
                     ComprobarAlmacenes = False
                 End If
+            Else
+                ComprobarAlmacenes = True
             End If
 
         Catch exCOM As System.Runtime.InteropServices.COMException
